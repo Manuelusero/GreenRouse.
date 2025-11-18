@@ -1,0 +1,40 @@
+'use client'
+
+import { useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+
+export default function AuthCallbackPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/parcelas'
+
+  useEffect(() => {
+    if (status === 'loading') return
+
+    if (status === 'authenticated' && session) {
+      console.log('✅ Autenticación exitosa, redirigiendo a:', callbackUrl)
+      // Redirigir después de un breve delay para asegurar que la sesión esté lista
+      setTimeout(() => {
+        router.push(callbackUrl)
+        router.refresh()
+      }, 500)
+    } else if (status === 'unauthenticated') {
+      console.log('❌ No autenticado, redirigiendo a login')
+      router.push('/auth/login')
+    }
+  }, [status, session, router, callbackUrl])
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-6xl mb-4 animate-bounce">🌱</div>
+        <h2 className="text-2xl font-bold text-soil-dark mb-2">
+          {status === 'loading' ? 'Iniciando sesión...' : 'Redirigiendo...'}
+        </h2>
+        <p className="text-gray-600">Por favor espera un momento</p>
+      </div>
+    </div>
+  )
+}
