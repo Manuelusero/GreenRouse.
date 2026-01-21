@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Modal from './Modal'
@@ -27,7 +27,7 @@ interface ParcelasClientProps {
   userEmail: string
 }
 
-export default function ParcelasClient({ parcelas: initialParcelas, userEmail }: ParcelasClientProps) {
+function ParcelasClient({ parcelas: initialParcelas, userEmail }: ParcelasClientProps) {
   const [parcelas, setParcelas] = useState<Parcela[]>(initialParcelas)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -479,3 +479,9 @@ function FormularioNuevaParcela({
     </form>
   )
 }
+
+// Memoizar el componente para evitar re-renders innecesarios
+const ParcelasClientMemo = memo(ParcelasClient)
+ParcelasClientMemo.displayName = 'ParcelasClient'
+
+export default ParcelasClientMemo

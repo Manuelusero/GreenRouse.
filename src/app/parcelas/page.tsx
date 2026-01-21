@@ -2,7 +2,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { getServerSession } from 'next-auth/next'
 import { redirect } from 'next/navigation'
-import ParcelasClient from '@/components/ParcelasClient'
+import ParcelasPageContent from '@/components/ParcelasPageContent'
 import connectDB from '@/lib/mongodb'
 import Parcela from '@/models/Parcela'
 
@@ -32,7 +32,7 @@ export default async function ParcelasPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <ParcelasClient parcelas={parcelas} userEmail={session.user?.email || ''} />
+      <ParcelasPageContent userEmail={session.user?.email || ''} />
       <Footer />
     </div>
   )

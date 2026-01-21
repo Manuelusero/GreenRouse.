@@ -69,7 +69,11 @@ const UsuarioSchema = new mongoose.Schema({
 })
 
 // Índices para optimizar búsquedas
-UsuarioSchema.index({ email: 1 })
+UsuarioSchema.index({ email: 1 }, { unique: true })
 UsuarioSchema.index({ experiencia: 1, espacio: 1 })
+UsuarioSchema.index({ createdAt: -1 })
+UsuarioSchema.index({ provider: 1 })
+UsuarioSchema.index({ 'perfil.notificaciones': 1 })
+UsuarioSchema.index({ objetivos: 1 })
 
 export default mongoose.models.Usuario || mongoose.model('Usuario', UsuarioSchema)

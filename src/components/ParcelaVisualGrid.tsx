@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { memo, useState, useEffect, useMemo } from 'react'
 import { useAsociaciones, verificarCompatibilidad, esPlantaRecomendada } from '@/hooks/useAsociaciones'
 
 interface Planta {
@@ -57,7 +57,7 @@ interface CeldaGrid {
   esPasillo: boolean // Si es un pasillo (no cultivable)
 }
 
-export default function ParcelaVisualGrid({ nombre, cultivos, area, dimensiones, onEdit }: ParcelaVisualProps) {
+function ParcelaVisualGrid({ nombre, cultivos, area, dimensiones, onEdit }: ParcelaVisualProps) {
   const [editMode, setEditMode] = useState(false)
   const [selectedPlantToAdd, setSelectedPlantToAdd] = useState<string | null>(null)
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
@@ -702,3 +702,9 @@ export default function ParcelaVisualGrid({ nombre, cultivos, area, dimensiones,
     </div>
   )
 }
+
+// Memoizar el componente para evitar re-renders innecesarios
+const ParcelaVisualGridMemo = memo(ParcelaVisualGrid)
+ParcelaVisualGridMemo.displayName = 'ParcelaVisualGrid'
+
+export default ParcelaVisualGridMemo

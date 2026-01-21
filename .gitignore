@@ -7,3 +7,6 @@ node_modules
 dist
 build
 .next/
+logs/
+# Documentación de fases de optimización
+FASE_*_COMPLETADA.md

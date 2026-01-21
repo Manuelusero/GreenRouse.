@@ -114,5 +114,11 @@ const ParcelaSchema = new mongoose.Schema({
 // Índices para optimizar búsquedas
 ParcelaSchema.index({ usuarioEmail: 1 })
 ParcelaSchema.index({ estado: 1 })
+ParcelaSchema.index({ usuarioEmail: 1, estado: 1, createdAt: -1 })
+ParcelaSchema.index({ usuarioEmail: 1, tipo: 1, createdAt: -1 })
+ParcelaSchema.index({ usuarioEmail: 1, nombre: 'text', descripcion: 'text', cultivos: 'text' })
+ParcelaSchema.index({ createdAt: -1 })
+ParcelaSchema.index({ usuario_id: 1, estado: 1, createdAt: -1 })
+ParcelaSchema.index({ generadoAutomaticamente: 1 })
 
 export default mongoose.models.Parcela || mongoose.model('Parcela', ParcelaSchema)
