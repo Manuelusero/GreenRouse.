@@ -10,16 +10,27 @@ export function WebVitals({ onMetric }: WebVitalsProps) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // Importar dinámicamente para evitar SSR issues
-      import('web-vitals').then((webVitals: any) => {
-        const { getCLS, getFID, getFCP, getLCP, getTTFB } = webVitals
-        getCLS(onMetric) // Cumulative Layout Shift
-        getFID(onMetric) // First Input Delay
-        getFCP(onMetric) // First Contentful Paint
-        getLCP(onMetric) // Largest Contentful Paint
-        getTTFB(onMetric) // Time to First Byte
-      }).catch(error => {
-        console.warn('Error loading web-vitals:', error)
-      })
+      import('web-vitals')
+        .then((webVitalsModule) => {
+          // Verificar que el módulo se cargó correctamente
+          if (!webVitalsModule) {
+            console.warn('Web vitals module not loaded')
+            return
+          }
+          
+          const webVitals = webVitalsModule as any
+          const { getCLS, getFID, getFCP, getLCP, getTTFB } = webVitals
+          
+          // Verificar que las funciones existan antes de llamarlas
+          if (typeof getCLS === 'function') getCLS(onMetric)
+          if (typeof getFID === 'function') getFID(onMetric)
+          if (typeof getFCP === 'function') getFCP(onMetric)
+          if (typeof getLCP === 'function') getLCP(onMetric)
+          if (typeof getTTFB === 'function') getTTFB(onMetric)
+        })
+        .catch((error) => {
+          console.warn('Error loading web-vitals:', error)
+        })
     }
   }, [onMetric])
 

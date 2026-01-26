@@ -1061,16 +1061,13 @@ export default function ComenzarHuerta() {
                           const parcelasCreadas = result.parcelas_creadas?.length || 0
                           console.log(`🌱 Se crearon ${parcelasCreadas} parcela(s)`)
                           
-                          // También mantener en localStorage como backup
-                          localStorage.setItem('greenrouse-onboarding', JSON.stringify(datosCompletos))
-                          
-                          // Mostrar mensaje de éxito
+                          // Guardar datos en localStorage para uso posterior
+                          localStorage.setItem('greenrouse-onboarding', JSON.stringify(formData))
+                          // Redirigir a parcelas con los datos usando Next.js router
+                          router.push('/parcelas?from=onboarding')
                           if (parcelasCreadas > 0) {
                             alert(`¡Perfecto! Se han creado ${parcelasCreadas} parcela(s) basadas en tu configuración.`)
                           }
-                          
-                          // Redirigir a parcelas
-                          router.push('/parcelas?from=onboarding')
                           return
                         }
                       }
@@ -1095,7 +1092,7 @@ export default function ComenzarHuerta() {
                       localStorage.setItem('greenrouse-onboarding', JSON.stringify(datosCompletos))
                       localStorage.setItem('greenrouse-parcelas-temp', JSON.stringify(formData.parcelas || []))
                       alert('Hubo un problema, pero tus datos se guardaron localmente.')
-                      router.push('/parcelas?mode=local&from=onboarding')
+                      // Omitir redirección automática para evitar el problema
                     }
                   }}
                   className="bg-leaf-green text-white px-6 py-4 rounded-lg hover:bg-leaf-green/90 transition-colors font-semibold"

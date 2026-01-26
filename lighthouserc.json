@@ -1,0 +1,32 @@
+{
+    "ci": {
+        "collect": {
+            "url": [
+                "http://localhost:3000"
+            ],
+            "startServerCommand": "npm run dev",
+            "startServerReadyPattern": "ready",
+            "startServerReadyTimeout": 30000
+        },
+        "assert": {
+            "assertions": {
+                "categories:performance": [
+                    "warn"
+                ],
+                "categories:accessibility": [
+                    "error"
+                ],
+                "categories:best-practices": [
+                    "warn"
+                ],
+                "categories:seo": [
+                    "warn"
+                ],
+                "categories:pwa": "off"
+            }
+        },
+        "upload": {
+            "target": "temporary-public-storage"
+        }
+    }
+}

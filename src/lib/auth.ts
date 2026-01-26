@@ -5,6 +5,9 @@ import bcrypt from 'bcryptjs'
 import connectDB from '@/lib/mongodb'
 import Usuario from '@/models/Usuario'
 
+// Importar tipos correctos de NextAuth
+import type { DefaultSession } from 'next-auth'
+
 export const authOptions: AuthOptions = {
   providers: [
     GoogleProvider({
@@ -96,49 +99,16 @@ export const authOptions: AuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 días
     updateAge: 24 * 60 * 60, // 24 horas
   },
+
+  useSecureCookies: process.env.NODE_ENV === 'production',
   
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // Si es login con Google/OAuth, crear/actualizar usuario en BD
-      if (account?.provider === 'google') {
-        try {
-          await connectDB()
-          
-          // Buscar si el usuario ya existe
-          let existingUser = await Usuario.findOne({ email: user.email?.toLowerCase() })
-          
-          if (!existingUser) {
-            // Crear nuevo usuario
-            console.log('🆕 Creando nuevo usuario con Google:', user.email)
-            existingUser = await Usuario.create({
-              email: user.email?.toLowerCase(),
-              nombre: user.name || user.email?.split('@')[0],
-              avatar: user.image,
-              experiencia: 'principiante',
-              espacio: 'balcon',
-              ubicacion: 'sol',
-              objetivos: ['hobby'],
-              tiempo: 'poco'
-            })
-            console.log('✅ Usuario creado con ID:', existingUser._id)
-          } else {
-            console.log('👤 Usuario existente encontrado:', existingUser._id)
-            // Actualizar avatar si cambió
-            if (user.image && existingUser.avatar !== user.image) {
-              existingUser.avatar = user.image
-              await existingUser.save()
-            }
-          }
-          
-          // Asignar el ID de MongoDB al user object
-          user.id = existingUser._id.toString()
-          
-          return true
-        } catch (error) {
-          console.error('❌ Error en signIn callback:', error)
-          return true // Permitir login pero loggear el error
-        }
-      }
+    async signIn({ user, account, profile, isNewUser }: { user: any; account: any; profile?: any; isNewUser?: boolean }) {
+      console.log('🔐 [AUTH CALLBACK] signIn iniciado:', {
+        email: user.email,
+        provider: account?.provider,
+        isNewUser
+      })
       
       // Para email magic link, también necesitamos el ID
       if (account?.provider === 'email') {
@@ -149,7 +119,63 @@ export const authOptions: AuthOptions = {
             user.id = existingUser._id.toString()
           }
         } catch (error) {
-          console.error('❌ Error obteniendo usuario para email:', error)
+          console.error('❌ [AUTH CALLBACK] Error obteniendo usuario para email:', error)
+        }
+      }
+      
+      // Para Google OAuth, crear/actualizar usuario en BD
+      if (account?.provider === 'google') {
+        try {
+          await connectDB()
+          
+          // Buscar si el usuario ya existe
+          let existingUser = await Usuario.findOne({ email: user.email?.toLowerCase() })
+          
+          if (!existingUser) {
+            // Crear nuevo usuario con datos completos de Google
+            console.log('🆕 [AUTH CALLBACK] Creando nuevo usuario con Google:', user.email)
+            existingUser = await Usuario.create({
+              email: user.email?.toLowerCase(),
+              nombre: user.name || user.email?.split('@')[0],
+              avatar: user.image,
+              experiencia: 'principiante',
+              espacio: 'balcon',
+              ubicacion: 'sol',
+              objetivos: ['hobby'],
+              tiempo: 'poco',
+              perfil: {
+                nombreCompleto: user.name,
+                imagenGoogle: user.image,
+                verificado: true,
+                fechaRegistro: new Date(),
+                completadoAutomaticamente: true
+              }
+            })
+            console.log('✅ [AUTH CALLBACK] Usuario creado con ID:', existingUser._id)
+          } else {
+            console.log('👤 [AUTH CALLBACK] Usuario existente encontrado:', existingUser._id)
+            // Actualizar avatar si cambió y marcar como datos actualizados
+            if (user.image && existingUser.avatar !== user.image) {
+              existingUser.avatar = user.image
+              // Actualizar perfil con datos de Google
+              if (!existingUser.perfil) {
+                existingUser.perfil = {}
+              }
+              existingUser.perfil.imagenGoogle = user.image
+              existingUser.perfil.ultimaActualizacion = new Date()
+              await existingUser.save()
+              console.log('🔄 [AUTH CALLBACK] Avatar actualizado para usuario:', existingUser._id)
+            }
+          }
+          
+          // Asignar el ID de MongoDB al user object
+          user.id = existingUser._id.toString()
+
+          console.log('✅ [AUTH CALLBACK] SignIn callback completado')
+          return true
+        } catch (error) {
+          console.error('❌ [AUTH CALLBACK] Error en signIn callback:', error)
+          return true // Permitir login pero loggear el error
         }
       }
       
@@ -189,6 +215,24 @@ export const authOptions: AuthOptions = {
         session.user.image = token.picture as string
       }
       return session
+    },
+
+    async redirect({ url, baseUrl }) {
+      try {
+        // Si por algún motivo se intenta redirigir a /parcelas después del login,
+        // forzar a /perfil (requerimiento del flujo).
+        if (url.startsWith(baseUrl)) {
+          const path = url.slice(baseUrl.length)
+          if (path === '/parcelas' || path.startsWith('/parcelas/')) {
+            return `${baseUrl}/perfil`
+          }
+          return url
+        }
+        // Evitar open-redirects
+        return baseUrl
+      } catch {
+        return baseUrl
+      }
     }
   },
   
@@ -196,12 +240,14 @@ export const authOptions: AuthOptions = {
     signIn: '/auth/login',
     error: '/auth/login',
     signOut: '/',
+    // Redirigir al perfil después del login (cualquier método)
+    newUser: '/perfil?welcome=true',
   },
   
   secret: process.env.NEXTAUTH_SECRET,
   
   events: {
-    async signIn({ user, account, profile, isNewUser }) {
+    async signIn({ user, account, profile, isNewUser }: { user: any; account: any; profile?: any; isNewUser?: boolean }) {
       console.log('✅ Usuario ha iniciado sesión:', user.email)
       if (isNewUser) {
         console.log('🆕 Nuevo usuario detectado')

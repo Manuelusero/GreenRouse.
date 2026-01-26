@@ -2,14 +2,40 @@
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { useSession, signOut } from 'next-auth/react'
+import { useRouter, usePathname } from 'next/navigation'
 import { useHydration } from '@/hooks/useHydration'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [nombrePersonalizado, setNombrePersonalizado] = useState('')
   const { data: session, status } = useSession()
+  const router = useRouter()
+  const pathname = usePathname()
   const userMenuRef = useRef<HTMLDivElement>(null)
   const isHydrated = useHydration()
+
+  // Escuchar cambios de nombre desde el perfil
+  useEffect(() => {
+    const handleNombreActualizado = (event: CustomEvent) => {
+      setNombrePersonalizado(event.detail.nombre)
+    }
+
+    window.addEventListener('nombreActualizado', handleNombreActualizado as EventListener)
+    
+    return () => {
+      window.removeEventListener('nombreActualizado', handleNombreActualizado as EventListener)
+    }
+  }, [])
+
+  useEffect(() => {
+    console.log('🔍 [HEADER] useEffect:', {
+      status,
+      hasSession: !!session,
+      userEmail: session?.user?.email,
+      isHydrated
+    })
+  }, [status, session, isHydrated])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -38,9 +64,6 @@ export default function Header() {
           </div>
           
           <nav className="hidden md:flex space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-leaf-green transition-colors">
-              Inicio
-            </Link>
             <Link href="/parcelas" className="text-gray-700 hover:text-leaf-green transition-colors">
               Mis Parcelas
             </Link>
@@ -74,7 +97,7 @@ export default function Header() {
                     </span>
                   </div>
                   <span className="text-gray-700 font-medium">
-                    ¡Hola, {session.user?.name?.split(' ')[0] || 'Usuario'}!
+                    ¡Hola, {nombrePersonalizado?.split(' ')[0] || session.user?.name?.split(' ')[0] || 'Usuario'}!
                   </span>
                 </div>
                 <div className="relative" ref={userMenuRef}>
@@ -106,6 +129,7 @@ export default function Header() {
                       <hr className="my-1" />
                       <button
                         onClick={() => {
+                          console.log('🚪 [HEADER] Cerrando sesión manualmente')
                           setIsUserMenuOpen(false)
                           signOut({ callbackUrl: '/' })
                         }}
@@ -148,11 +172,8 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
-              <Link href="/" className="block px-3 py-2 text-gray-700 hover:text-leaf-green">
-                Inicio
-              </Link>
               <Link href="/parcelas" className="block px-3 py-2 text-gray-700 hover:text-leaf-green">
-                Mis Parcelas
+                Huertas
               </Link>
               <Link href="/cursos" className="block px-3 py-2 text-gray-700 hover:text-leaf-green">
                 Cursos

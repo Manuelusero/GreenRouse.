@@ -9,6 +9,8 @@ interface ParcelasPageContentProps {
 }
 
 function ParcelasPageContent({ userEmail }: ParcelasPageContentProps) {
+  console.log('📧 ParcelasPageContent recibió userEmail:', userEmail)
+  
   const handleEditParcela = (parcela: any) => {
     // Lógica para editar parcela
     console.log('Editar parcela:', parcela)

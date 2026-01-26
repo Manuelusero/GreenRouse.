@@ -14,12 +14,12 @@ export default function Hero() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/comenzar" className="bg-white text-leaf-green px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg">
+          <Link href="/comenzar" className="bg-white text-leaf-green px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg mx-auto sm:mx-0">
             Comenzar mi Huerta
           </Link>
-          <Link href="/cursos" className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-leaf-green transition-colors">
+          {/* <Link href="/cursos" className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-leaf-green transition-colors">
             Explorar Cursos
-          </Link>
+          </Link> */}
         </div>
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">

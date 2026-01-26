@@ -5,9 +5,11 @@ import ParcelaTextoDistribucion from '@/components/ParcelaTextoDistribucion'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 export default function ParcelaDetalle({ params }: { params: Promise<{ id: string }> }) {
   const { data: session } = useSession()
+  const router = useRouter()
   const [id, setId] = useState('')
   const [parcela, setParcela] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -91,8 +93,8 @@ export default function ParcelaDetalle({ params }: { params: Promise<{ id: strin
 
       if (response.ok) {
         alert('¡Parcela eliminada exitosamente!')
-        // Redirigir a la página de parcelas
-        window.location.href = '/parcelas'
+        // Redirigir a la página de parcelas usando Next.js router
+        router.push('/parcelas')
       } else {
         const error = await response.json()
         alert(`Error eliminando la parcela: ${error.message}`)

@@ -9,7 +9,7 @@ import dynamic from 'next/dynamic'
 const Header = dynamic(() => import('@/components/Header'), { ssr: false })
 const Footer = dynamic(() => import('@/components/Footer'), { ssr: false })
 
-export default function LoginPage() {
+export default function LogixnPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [formData, setFormData] = useState({
     email: '',
@@ -50,19 +50,18 @@ export default function LoginPage() {
         email: formData.email,
         password: formData.password,
         action: isLogin ? 'login' : 'register',
-        redirect: false
+        redirect: true, // Cambiado a true para usar el mecanismo de NextAuth
+        callbackUrl: '/perfil' // Especificar URL de redirección
       })
 
+      console.log('🔐 [LOGIN] Resultado signIn:', { ok: result?.ok, error: result?.error })
+      
       if (result?.error) {
+        console.log('❌ [LOGIN] Error en signIn:', result.error)
         setError(result.error)
       } else if (result?.ok) {
-        // Obtener la sesión actualizada
-        const session = await getSession()
-        if (session) {
-          // Redirigir según si el usuario ha completado onboarding
-          router.push('/parcelas')
-          router.refresh()
-        }
+        console.log('✅ [LOGIN] Login exitoso, NextAuth debería redirigir automáticamente...')
+        // NextAuth manejará la redirección automáticamente
       }
     } catch (error: any) {
       setError(error.message || 'Error en autenticación')
@@ -196,7 +195,7 @@ export default function LoginPage() {
                 onClick={async () => {
                   console.log('🔐 Iniciando login con Google...')
                   await signIn('google', { 
-                    callbackUrl: '/parcelas',
+                    callbackUrl: '/perfil',
                     redirect: true 
                   })
                 }}

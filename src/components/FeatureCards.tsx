@@ -9,7 +9,7 @@ const features = [
     color: 'from-leaf-green to-sage-green'
   },
   {
-    title: 'Cursos de Permacultura',
+    title: 'Cursos',
     description: 'Accede a cursos especializados en técnicas sostenibles, compostaje, rotación de cultivos y diseño permacultural.',
     icon: '📚',
     link: '/cursos',
@@ -30,11 +30,11 @@ const features = [
     color: 'from-earth-brown to-orange-600'
   },
   {
-    title: 'Calculadora de Cultivos',
-    description: 'Herramientas para calcular espaciado, fechas de siembra, y compatibilidad entre cultivos para optimizar tu producción.',
-    icon: '🧮',
-    link: '/calculadora',
-    color: 'from-purple-500 to-pink-500'
+    title: 'Guía de Verduras',
+    description: 'Explora nuestra enciclopedia de verduras y frutas. Consulta a nuestra IA especializada sobre cultivos, cuidados y recomendaciones.',
+    icon: '🥬',
+    link: '/verduras',
+    color: 'from-earth-brown to-orange-600'
   },
   {
     title: 'Comunidad',

@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useEffect } from 'react'
 import { useParcelasStore } from '@/stores'
 import ParcelaCard from './ParcelaCard'
 import PaginationControls from './PaginationControls'
@@ -19,9 +19,25 @@ function ParcelasList({
   onDeleteParcela, 
   onViewParcela 
 }: ParcelasListProps) {
-  const { parcelas, loading, error } = useParcelasStore()
+  console.log('📧 ParcelasList recibió userEmail:', userEmail)
+  
+  const { 
+    parcelas, 
+    loading, 
+    error, 
+    fetchParcelas 
+  } = useParcelasStore()
+
+  // Efecto para cargar las parcelas cuando cambia el userEmail
+  useEffect(() => {
+    if (userEmail) {
+      console.log('🌱 Cargando parcelas para:', userEmail)
+      fetchParcelas(userEmail, 1, 10)
+    }
+  }, [userEmail]) // Solo dependemos de userEmail
 
   if (loading) {
+    console.log('⏳ Cargando parcelas...')
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-leaf-green"></div>
@@ -31,6 +47,7 @@ function ParcelasList({
   }
 
   if (error) {
+    console.log('❌ Error cargando parcelas:', error)
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <div className="flex items-center">
@@ -43,6 +60,8 @@ function ParcelasList({
       </div>
     )
   }
+
+  console.log('📊 Parcelas cargadas:', parcelas.length, parcelas)
 
   if (parcelas.length === 0) {
     return (
