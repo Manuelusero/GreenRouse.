@@ -23,8 +23,8 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       if (item) {
         setStoredValue(JSON.parse(item))
       }
-    } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error)
+    } catch {
+      // silent — value stays at initialValue
     } finally {
       setIsHydrated(true)
     }
@@ -37,8 +37,8 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(key, JSON.stringify(valueToStore))
       }
-    } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error)
+    } catch {
+      // silent — localStorage write failure
     }
   }
 

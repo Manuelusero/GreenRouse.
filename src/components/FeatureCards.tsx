@@ -31,16 +31,16 @@ const features = [
   },
   {
     title: 'Guía de Verduras',
-    description: 'Explora nuestra enciclopedia de verduras y frutas. Consulta a nuestra IA especializada sobre cultivos, cuidados y recomendaciones.',
+    description: 'Explora nuestra enciclopedia de verduras y frutas. Consultá información de cultivo, riego, asociaciones y épocas de siembra para cada especie.',
     icon: '🥬',
     link: '/verduras',
     color: 'from-earth-brown to-orange-600'
   },
   {
-    title: 'Comunidad',
-    description: 'Conecta con otros horticultores, comparte experiencias, y participa en intercambios de semillas y conocimiento.',
-    icon: '👥',
-    link: '/comunidad',
+    title: 'Calculadora',
+    description: 'Calculá cuántas plantas entran en tu espacio, estimá rendimientos y planífica la rotación de cultivos temporada a temporada.',
+    icon: '🧹',
+    link: '/calculadora',
     color: 'from-green-600 to-teal-500'
   }
 ]

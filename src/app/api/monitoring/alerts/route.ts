@@ -90,10 +90,9 @@ export async function GET(request: NextRequest) {
       },
       timestamp: new Date().toISOString(),
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     Logger.error('Error obteniendo alertas de monitoring', {
-      error: error.message,
-      stack: error.stack,
+      error: error instanceof Error ? error.message : String(error),
     })
 
     return NextResponse.json(
@@ -152,10 +151,9 @@ export async function POST(request: NextRequest) {
       alert: newAlert,
       message: 'Alerta creada exitosamente'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     Logger.error('Error creando alerta de monitoring', {
-      error: error.message,
-      stack: error.stack,
+      error: error instanceof Error ? error.message : String(error),
     })
 
     return NextResponse.json(
@@ -185,10 +183,9 @@ export async function PUT(
       success: true,
       message: 'Alerta actualizada exitosamente'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     Logger.error('Error actualizando alerta', {
-      error: error.message,
-      stack: error.stack,
+      error: error instanceof Error ? error.message : String(error),
     })
 
     return NextResponse.json(

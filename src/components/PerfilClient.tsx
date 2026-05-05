@@ -70,7 +70,6 @@ export default function PerfilClient() {
       setPerfilCargado(true)
       
     } catch (error) {
-      console.log('Error cargando perfil, usando nombre de Google:', error instanceof Error ? error.message : String(error))
       // En caso de error, usar el nombre de Google
       const formData = {
         nombre: session?.user?.name || '',
@@ -119,7 +118,7 @@ export default function PerfilClient() {
       // No hacer refresh - mantener la experiencia seleccionada visible
       
     } catch (error) {
-      console.error('Error guardando perfil:', error)
+      // silent — the UI shows no success toast if save fails
     } finally {
       setIsSaving(false)
     }

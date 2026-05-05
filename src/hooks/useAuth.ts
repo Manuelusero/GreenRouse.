@@ -73,8 +73,8 @@ export function useAuth() {
     try {
       await fetch('/api/auth/signout', { method: 'POST' })
       // NextAuth manejará el cierre de sesión automáticamente
-    } catch (error) {
-      console.error('Error en logout:', error)
+    } catch {
+      // silent
     }
   }
 

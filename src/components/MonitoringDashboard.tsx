@@ -39,7 +39,7 @@ export default function MonitoringDashboard({ className = '' }: MonitoringDashbo
       setMetrics(data.metrics)
       setPerformance(data.performance)
     } catch (error) {
-      console.error('Error fetching metrics:', error)
+      // silent failure — UI shows no data
     } finally {
       setLoading(false)
     }

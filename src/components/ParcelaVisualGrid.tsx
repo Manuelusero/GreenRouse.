@@ -112,12 +112,6 @@ function ParcelaVisualGrid({ nombre, cultivos, area, dimensiones, onEdit }: Parc
       }
     }
     
-    console.log('Grid inicializado con pasillos horizontales:', {
-      totalFilas: filas,
-      totalColumnas: columnas,
-      pasillosEnFilas: Array.from({length: filas}, (_, i) => i).filter(f => f > 0 && (f + 1) % 5 === 0)
-    })
-    
     setGrid(nuevoGrid)
   }, [filas, columnas])
   

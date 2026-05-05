@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import Logger from '@/lib/logger'
 
 const MONGODB_URI = process.env.MONGODB_URI!
 
@@ -28,10 +29,10 @@ async function connectDB() {
     }
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log('✅ MongoDB conectado exitosamente')
+      Logger.info('MongoDB conectado exitosamente')
       return mongoose
     }).catch((error) => {
-      console.error('❌ Error conectando a MongoDB:', error)
+      Logger.error('Error conectando a MongoDB', { error: error instanceof Error ? error.message : error })
       throw error
     })
   }

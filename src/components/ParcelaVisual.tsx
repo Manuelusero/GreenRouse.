@@ -335,7 +335,6 @@ export default function ParcelaVisual({ nombre, cultivos, area, onEdit }: Parcel
             ...prev,
             [plantKey]: { x, y }
           }))
-          console.log(`🔄 ${PLANTAS_INFO[plantData.plant]?.nombre || plantData.plant} reposicionada`)
         }
       }
       

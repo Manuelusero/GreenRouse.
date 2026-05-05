@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Logger from '@/lib/logger'
 
 // Tipos para la respuesta de OpenWeatherMap
 interface WeatherData {
@@ -77,7 +78,6 @@ export async function GET(request: NextRequest) {
     
     // Si no hay API key, devolver datos simulados
     if (!API_KEY || API_KEY === 'demo_key') {
-      console.log('⚠️  No hay API key de OpenWeatherMap, devolviendo datos simulados')
       
       // Datos simulados basados en ubicaciones conocidas
       const datosSimulados: Record<string, ClimateInfo> = {
@@ -133,8 +133,6 @@ export async function GET(request: NextRequest) {
     const query = pais ? `${ciudad},${pais}` : ciudad
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(query)}&appid=${API_KEY}&units=metric&lang=es`
     
-    console.log('🌤️  Consultando clima para:', query)
-    
     // Hacer petición a OpenWeatherMap
     const response = await fetch(url, {
       headers: {
@@ -143,8 +141,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (!response.ok) {
-      console.error('❌ Error en API de clima:', response.status, response.statusText)
-      throw new Error(`Error de API: ${response.status}`)
+      throw new Error(`Error de API de clima: ${response.status}`)
     }
 
     const weatherData: WeatherData = await response.json()
@@ -167,8 +164,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('✅ Datos climáticos obtenidos:', climateInfo)
-
     return NextResponse.json({
       success: true,
       data: climateInfo,
@@ -176,7 +171,9 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('❌ Error obteniendo datos climáticos:', error)
+    Logger.error('GET /api/clima error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
     
     // Obtener parámetros nuevamente para el fallback
     const { searchParams: fallbackParams } = new URL(request.url)

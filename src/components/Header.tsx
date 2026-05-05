@@ -29,15 +29,6 @@ export default function Header() {
   }, [])
 
   useEffect(() => {
-    console.log('🔍 [HEADER] useEffect:', {
-      status,
-      hasSession: !!session,
-      userEmail: session?.user?.email,
-      isHydrated
-    })
-  }, [status, session, isHydrated])
-
-  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setIsUserMenuOpen(false)
@@ -129,7 +120,6 @@ export default function Header() {
                       <hr className="my-1" />
                       <button
                         onClick={() => {
-                          console.log('🚪 [HEADER] Cerrando sesión manualmente')
                           setIsUserMenuOpen(false)
                           signOut({ callbackUrl: '/' })
                         }}

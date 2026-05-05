@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { verdurasData, Verdura } from '@/data/verduras'
-import ChatVerduras from '@/components/ChatVerduras'
 
 export default function VerduraCatchAllPage() {
   const params = useParams()
@@ -140,18 +139,80 @@ export default function VerduraCatchAllPage() {
             </div>
           </div>
 
-          {/* Chat con IA */}
+          {/* Panel lateral — consejos y asociaciones */}
           <div className="lg:col-span-1">
-            <div className="sticky top-8">
-              <ChatVerduras verdura={verdura || {
-                id: verduraId,
-                nombre: nombreVerdura,
-                emoji: '🌱',
-                descripcion: `Planta especializada con asistencia de IA`,
-                temporada: 'Consultar con IA',
-                riego: 'Consultar con IA',
-                sol: 'Consultar con IA'
-              }} />
+            <div className="sticky top-8 space-y-6">
+
+              {/* Asociaciones — disponible si el modelo lo incluye en el futuro */}
+              {(verdura as any)?.asociaciones?.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">🤝 Buenas Compañeras</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {((verdura as any).asociaciones as string[]).map((a) => (
+                      <Link
+                        key={a}
+                        href={`/verduras/${a.toLowerCase()}`}
+                        className="bg-leaf-green/10 text-leaf-green text-sm font-medium px-3 py-1 rounded-full hover:bg-leaf-green/20 transition-colors capitalize"
+                      >
+                        {a}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Consejos rápidos */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">💡 Consejos Rápidos</h3>
+                <ul className="space-y-3 text-sm text-gray-600">
+                  {verdura ? (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <span>Temporada óptima: <strong>{verdura.temporada}</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500 mt-0.5">✓</span>
+                        <span>Riego: <strong>{verdura.riego}</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-yellow-500 mt-0.5">✓</span>
+                        <span>Exposición: <strong>{verdura.sol}</strong></span>
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <span>Consultá la ficha de verduras similares para estimar épocas de siembra</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500 mt-0.5">✓</span>
+                        <span>La mayoría de hortalizas prefieren suelo bien drenado y rico en materia orgánica</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-yellow-500 mt-0.5">✓</span>
+                        <span>Rotá cultivos para mantener la salud del suelo</span>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
+
+              {/* CTA — ir a parcelas */}
+              <div className="bg-gradient-to-br from-leaf-green to-sage-green rounded-xl p-6 text-white">
+                <h3 className="font-bold text-lg mb-2">¿Querés cultivarla?</h3>
+                <p className="text-white/80 text-sm mb-4">
+                  Agregala a una de tus parcelas y llevá el seguimiento de tu huerta.
+                </p>
+                <Link
+                  href="/parcelas"
+                  className="block w-full bg-white text-leaf-green font-semibold text-center py-2 rounded-lg hover:bg-white/90 transition-colors text-sm"
+                >
+                  Ir a Mis Parcelas →
+                </Link>
+              </div>
+
             </div>
           </div>
         </div>

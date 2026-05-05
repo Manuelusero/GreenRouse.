@@ -14,7 +14,6 @@ export function WebVitals({ onMetric }: WebVitalsProps) {
         .then((webVitalsModule) => {
           // Verificar que el módulo se cargó correctamente
           if (!webVitalsModule) {
-            console.warn('Web vitals module not loaded')
             return
           }
           
@@ -28,8 +27,8 @@ export function WebVitals({ onMetric }: WebVitalsProps) {
           if (typeof getLCP === 'function') getLCP(onMetric)
           if (typeof getTTFB === 'function') getTTFB(onMetric)
         })
-        .catch((error) => {
-          console.warn('Error loading web-vitals:', error)
+        .catch(() => {
+          // web-vitals no disponible en este entorno
         })
     }
   }, [onMetric])
@@ -51,7 +50,9 @@ export function reportWebVitals(metric: any) {
       userAgent: navigator.userAgent,
       timestamp: new Date().toISOString(),
     }),
-  }).catch(console.error)
+  }).catch(() => {
+    // silent — analytics not critical
+  })
 }
 
 // Función para enviar a servicios externos (Google Analytics, Vercel, etc.)

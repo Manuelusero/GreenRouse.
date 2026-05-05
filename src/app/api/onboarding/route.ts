@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import connectDB from '@/lib/mongodb'
 import Onboarding from '@/models/Onboarding'
-import Usuario from '@/models/Usuario'
 import Parcela from '@/models/Parcela'
+import Logger from '@/lib/logger'
 import { obtenerRecomendacionesUbicacion, obtenerEstacionActual, obtenerHemisferio } from '@/utils/geografia'
 
 // GET /api/onboarding?usuario_id=xxx - Obtener onboarding de usuario
@@ -16,7 +14,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const usuario_id = searchParams.get('usuario_id')
     
-    console.log('🔍 GET /api/onboarding - Buscando usuario_id:', usuario_id)
     
     if (!usuario_id) {
       return NextResponse.json({
@@ -27,10 +24,8 @@ export async function GET(request: NextRequest) {
     
     const onboarding = await Onboarding.findOne({ usuario_id })
     
-    console.log('📊 Onboarding encontrado:', onboarding ? 'SÍ' : 'NO')
     
     if (!onboarding) {
-      console.log('❌ No se encontró onboarding para usuario:', usuario_id)
       return NextResponse.json({
         success: false,
         error: 'Onboarding no encontrado'
@@ -41,12 +36,11 @@ export async function GET(request: NextRequest) {
       success: true,
       data: onboarding
     })
-  } catch (error: any) {
-    console.error('Error obteniendo onboarding:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'Error interno del servidor'
-    }, { status: 500 })
+  } catch (error: unknown) {
+    Logger.error('GET /api/onboarding error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+    return NextResponse.json({ success: false, error: 'Error interno del servidor' }, { status: 500 })
   }
 }
 
@@ -56,13 +50,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     const { usuario_id, paso_actual, datos, completado } = body
-    
-    console.log('📝 Datos recibidos en onboarding API:', {
-      usuario_id,
-      paso_actual,
-      completado,
-      datos: datos
-    })
     
     if (!usuario_id) {
       return NextResponse.json({
@@ -79,14 +66,11 @@ export async function POST(request: NextRequest) {
     
     if (onboarding) {
       // Actualizar onboarding existente
-      console.log('📊 Datos anteriores:', JSON.stringify(onboarding.datos, null, 2))
-      console.log('📊 Datos nuevos a fusionar:', JSON.stringify(datos, null, 2))
       
       onboarding.paso_actual = paso_actual || onboarding.paso_actual
       onboarding.datos = { ...onboarding.datos, ...datos }
       onboarding.completado = completado !== undefined ? completado : onboarding.completado
       
-      console.log('📊 Datos finales fusionados:', JSON.stringify(onboarding.datos, null, 2))
       
       if (completado && !onboarding.fecha_completado) {
         onboarding.fecha_completado = new Date()
@@ -94,8 +78,6 @@ export async function POST(request: NextRequest) {
         // Los datos del usuario se guardan en el onboarding, no necesitamos actualizar Usuario
 
         // Crear parcelas automáticamente basadas en los datos del onboarding
-        console.log('🌱 Iniciando creación de parcelas automáticas...')
-        console.log('📊 Datos disponibles:', datos)
         const parcelasCreadas = []
         
         // Determinar tipo de parcela basado en el espacio y ubicación del onboarding
@@ -157,15 +139,12 @@ export async function POST(request: NextRequest) {
             }
           })
           
-          console.log('✅ Parcela automática creada:', parcelaCreada)
           parcelasCreadas.push(parcelaCreada)
         } catch (parcelaError) {
-          console.error('❌ Error creando parcela automática:', parcelaError)
         }
 
         // También crear las parcelas manuales del paso 8 si existen
         if (datos.parcelas_creadas_manual && datos.parcelas_creadas_manual.length > 0) {
-          console.log('🔨 Creando parcelas manuales del paso 8:', datos.parcelas_creadas_manual)
           
           for (const parcelaManual of datos.parcelas_creadas_manual) {
             try {
@@ -196,29 +175,19 @@ export async function POST(request: NextRequest) {
                 }
               })
               
-              console.log('✅ Parcela manual creada:', parcelaManualCreada)
               parcelasCreadas.push(parcelaManualCreada)
             } catch (parcelaError) {
-              console.error('❌ Error creando parcela manual:', parcelaError)
             }
           }
         }
 
         // Generar recomendaciones basadas en ubicación geográfica
         if (datos.pais) {
-          console.log('🌍 Generando recomendaciones geográficas para:', datos.pais)
           
           try {
             const recomendaciones = obtenerRecomendacionesUbicacion(datos.pais)
             const hemisferio = obtenerHemisferio(datos.pais)
             const estacion = obtenerEstacionActual(datos.pais)
-            
-            console.log('🌎 Información geográfica:', {
-              pais: datos.pais,
-              hemisferio,
-              estacion,
-              cultivosRecomendados: recomendaciones.cultivos.slice(0, 5)
-            })
             
             // Actualizar configuración recomendada con información geográfica
             onboarding.configuracion_recomendada = {
@@ -237,12 +206,9 @@ export async function POST(request: NextRequest) {
               ]
             }
             
-            console.log('✅ Configuración recomendada generada:', onboarding.configuracion_recomendada)
           } catch (geoError) {
-            console.error('❌ Error generando recomendaciones geográficas:', geoError)
           }
         } else {
-          console.log('⚠️  No se especificó país, usando configuración básica')
           onboarding.configuracion_recomendada = {
             cultivos_sugeridos: ['lechuga', 'rábano', 'perejil', 'tomate', 'albahaca'],
             nivel_dificultad: datos.experiencia === 'principiante' ? 'fácil' : 
@@ -258,11 +224,9 @@ export async function POST(request: NextRequest) {
 
         // Guardar información de parcelas creadas en el onboarding
         onboarding.parcelas_creadas = parcelasCreadas.map(p => p._id)
-        console.log('📋 Parcelas creadas registradas en onboarding:', onboarding.parcelas_creadas)
       }
       
       await onboarding.save()
-      console.log('💾 Onboarding guardado correctamente')
     } else {
       // Crear nuevo onboarding
       onboarding = await Onboarding.create({
@@ -285,20 +249,17 @@ export async function POST(request: NextRequest) {
         'Onboarding actualizado'
     })
 
-  } catch (error: any) {
-    console.error('Error procesando onboarding:', error)
-    
-    if (error.name === 'ValidationError') {
-      const errorMessages = Object.values(error.errors).map((err: any) => err.message)
-      return NextResponse.json({
-        success: false,
-        error: errorMessages[0]
-      }, { status: 400 })
+  } catch (error: unknown) {
+    Logger.error('POST /api/onboarding error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+
+    if (error instanceof Error && error.name === 'ValidationError') {
+      const mongoErr = error as Error & { errors: Record<string, { message: string }> }
+      const msgs = Object.values(mongoErr.errors).map(e => e.message)
+      return NextResponse.json({ success: false, error: msgs[0] }, { status: 400 })
     }
 
-    return NextResponse.json({
-      success: false,
-      error: 'Error interno del servidor'
-    }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Error interno del servidor' }, { status: 500 })
   }
 }

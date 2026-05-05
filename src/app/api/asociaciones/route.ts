@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
 import PlantaAsociacion from '@/models/PlantaAsociacion'
+import Logger from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const tipo = searchParams.get('tipo')
     const temporada = searchParams.get('temporada')
 
-    let query: any = {}
+    const query: Record<string, unknown> = {}
 
     if (slug) {
       query.slug = slug.toLowerCase()
@@ -35,13 +36,12 @@ export async function GET(request: NextRequest) {
       count: plantas.length,
       data: plantas
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    Logger.error('GET /api/asociaciones error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Error al obtener asociaciones de plantas',
-        message: error.message
-      },
+      { success: false, error: 'Error al obtener asociaciones de plantas' },
       { status: 500 }
     )
   }
@@ -63,13 +63,12 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
+    Logger.error('POST /api/asociaciones error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Error al crear asociación de planta',
-        message: error.message
-      },
+      { success: false, error: 'Error al crear asociación de planta' },
       { status: 500 }
     )
   }

@@ -37,10 +37,9 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Métricas recibidas'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     Logger.error('Error procesando web vitals', {
-      error: error.message,
-      stack: error.stack,
+      error: error instanceof Error ? error.message : String(error),
     })
 
     return NextResponse.json(
@@ -81,10 +80,9 @@ export async function GET(request: NextRequest) {
     Logger.info('Web vitals stats requested', { period })
 
     return NextResponse.json(mockStats)
-  } catch (error: any) {
+  } catch (error: unknown) {
     Logger.error('Error obteniendo estadísticas de web vitals', {
-      error: error.message,
-      stack: error.stack,
+      error: error instanceof Error ? error.message : String(error),
     })
 
     return NextResponse.json(

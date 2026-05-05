@@ -40,8 +40,8 @@ export default function ParcelaDetalle({ params }: { params: Promise<{ id: strin
           setParcela(parcelaEncontrada)
         }
       }
-    } catch (error) {
-      console.error('Error obteniendo parcela:', error)
+    } catch {
+      // silent — loading state handles the error UI
     } finally {
       setLoading(false)
     }
@@ -72,13 +72,11 @@ export default function ParcelaDetalle({ params }: { params: Promise<{ id: strin
         // Recargar para asegurar datos actualizados
         fetchParcela()
       } else {
-        const error = await response.json()
-        console.error('Error actualizando parcela:', error)
-        alert('Error actualizando la parcela')
+        const responseError = await response.json()
+        alert(`Error actualizando la parcela: ${responseError.error || ''}`)
       }
       
-    } catch (error) {
-      console.error('Error actualizando parcela:', error)
+    } catch {
       alert('Error actualizando la parcela')
     }
   }
@@ -99,8 +97,7 @@ export default function ParcelaDetalle({ params }: { params: Promise<{ id: strin
         const error = await response.json()
         alert(`Error eliminando la parcela: ${error.message}`)
       }
-    } catch (error) {
-      console.error('Error eliminando parcela:', error)
+    } catch {
       alert('Error eliminando la parcela')
     }
   }

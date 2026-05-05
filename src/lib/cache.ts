@@ -1,4 +1,5 @@
 import Redis from 'ioredis'
+import Logger from '@/lib/logger'
 
 // Configuración de Redis con fallback
 class RedisClient {
@@ -11,7 +12,7 @@ class RedisClient {
         const redisUrl = process.env.REDIS_URL || process.env.REDIS_HOST
         
         if (!redisUrl) {
-          console.warn('⚠️ Redis no configurado. Usando fallback sin caché.')
+          Logger.warn('Redis no configurado. Usando fallback sin caché.')
           return null
         }
 
@@ -27,26 +28,26 @@ class RedisClient {
 
         // Event listeners
         this.instance.on('connect', () => {
-          console.log('✅ Redis conectado exitosamente')
+          Logger.info('Redis conectado exitosamente')
           this.isConnected = true
         })
 
         this.instance.on('error', (error) => {
-          console.error('❌ Error en Redis:', error)
+          Logger.error('Error en Redis', { error: error instanceof Error ? error.message : error })
           this.isConnected = false
         })
 
         this.instance.on('close', () => {
-          console.warn('⚠️ Conexión Redis cerrada')
+          Logger.warn('Conexión Redis cerrada')
           this.isConnected = false
         })
 
         this.instance.on('reconnecting', () => {
-          console.log('🔄 Redis reconectando...')
+          Logger.info('Redis reconectando...')
         })
 
       } catch (error) {
-        console.error('❌ Error inicializando Redis:', error)
+        Logger.error('Error inicializando Redis', { error: error instanceof Error ? error.message : error })
         this.instance = null
         this.isConnected = false
       }
@@ -98,14 +99,14 @@ export class CacheService {
       
       if (cached) {
         const data = JSON.parse(cached)
-        console.log(`🎯 Cache HIT: ${namespace}:${key}`)
+        Logger.debug(`Cache HIT: ${namespace}:${key}`)
         return data
       }
       
-      console.log(`❌ Cache MISS: ${namespace}:${key}`)
+      Logger.debug(`Cache MISS: ${namespace}:${key}`)
       return null
     } catch (error) {
-      console.error(`❌ Error obteniendo caché ${namespace}:${key}:`, error)
+      Logger.error(`Error obteniendo caché ${namespace}:${key}`, { error: error instanceof Error ? error.message : error })
       return null
     }
   }
@@ -119,10 +120,10 @@ export class CacheService {
       const ttl = customTTL || this.TTL[namespace as keyof typeof this.TTL] || 300
       
       await this.redis.setex(cacheKey, ttl, JSON.stringify(data))
-      console.log(`💾 Cache SET: ${namespace}:${key} (TTL: ${ttl}s)`)
+      Logger.debug(`Cache SET: ${namespace}:${key} (TTL: ${ttl}s)`)
       return true
     } catch (error) {
-      console.error(`❌ Error guardando caché ${namespace}:${key}:`, error)
+      Logger.error(`Error guardando caché ${namespace}:${key}`, { error: error instanceof Error ? error.message : error })
       return false
     }
   }
@@ -134,10 +135,10 @@ export class CacheService {
     try {
       const cacheKey = this.getKey(namespace, key)
       await this.redis.del(cacheKey)
-      console.log(`🗑️ Cache DEL: ${namespace}:${key}`)
+      Logger.debug(`Cache DEL: ${namespace}:${key}`)
       return true
     } catch (error) {
-      console.error(`❌ Error eliminando caché ${namespace}:${key}:`, error)
+      Logger.error(`Error eliminando caché ${namespace}:${key}`, { error: error instanceof Error ? error.message : error })
       return false
     }
   }
@@ -152,12 +153,12 @@ export class CacheService {
       
       if (keys.length > 0) {
         await this.redis.del(...keys)
-        console.log(`🗑️ Cache INVALIDATED: ${pattern} (${keys.length} keys)`)
+        Logger.debug(`Cache INVALIDATED: ${pattern} (${keys.length} keys)`)
       }
       
       return true
     } catch (error) {
-      console.error(`❌ Error invalidando caché ${pattern}:`, error)
+      Logger.error(`Error invalidando caché ${pattern}`, { error: error instanceof Error ? error.message : error })
       return false
     }
   }
@@ -195,7 +196,7 @@ export class CacheService {
       await this.set(namespace, key, result, ttl)
       return result
     } catch (error) {
-      console.error(`❌ Error en cache wrapper ${namespace}:${key}:`, error)
+      Logger.error(`Error en cache wrapper ${namespace}:${key}`, { error: error instanceof Error ? error.message : error })
       throw error
     }
   }
@@ -222,7 +223,7 @@ export class CacheService {
         info: info
       }
     } catch (error) {
-      console.error('❌ Error obteniendo estadísticas de Redis:', error)
+      Logger.error('Error obteniendo estadísticas de Redis', { error: error instanceof Error ? error.message : error })
       return { connected: false }
     }
   }

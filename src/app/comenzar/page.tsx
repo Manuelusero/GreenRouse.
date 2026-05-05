@@ -1032,8 +1032,6 @@ export default function ComenzarHuerta() {
                 <button
                   onClick={async () => {
                     try {
-                      console.log('🚀 Guardando datos:', formData)
-                      
                       // Incluir parcelas creadas en el paso 8
                       const datosCompletos = {
                         ...formData,
@@ -1054,12 +1052,9 @@ export default function ComenzarHuerta() {
                         })
                         
                         const result = await response.json()
-                        console.log('📨 Respuesta del servidor:', result)
 
                         if (response.ok && result.success) {
-                          console.log('✅ Onboarding guardado en BD')
                           const parcelasCreadas = result.parcelas_creadas?.length || 0
-                          console.log(`🌱 Se crearon ${parcelasCreadas} parcela(s)`)
                           
                           // Guardar datos en localStorage para uso posterior
                           localStorage.setItem('greenrouse-onboarding', JSON.stringify(formData))
@@ -1073,7 +1068,6 @@ export default function ComenzarHuerta() {
                       }
                       
                       // Si no está autenticado o falló, guardar localmente
-                      console.log('💾 Guardando localmente (sin autenticación)')
                       localStorage.setItem('greenrouse-onboarding', JSON.stringify(datosCompletos))
                       localStorage.setItem('greenrouse-parcelas-temp', JSON.stringify(formData.parcelas || []))
                       
@@ -1082,8 +1076,7 @@ export default function ComenzarHuerta() {
                       // Crear URL temporal para ver las parcelas
                       router.push('/parcelas?mode=local&from=onboarding')
                       
-                    } catch (error) {
-                      console.error('❌ Error:', error)
+                    } catch {
                       // En caso de error, usar localStorage y continuar
                       const datosCompletos = {
                         ...formData,
@@ -1140,8 +1133,6 @@ export default function ComenzarHuerta() {
                 onClick={paso === 9 ? async () => {
                   // Función de guardar para el paso 9
                   try {
-                    console.log('🚀 Guardando parcelas desde paso 9:', formData)
-                    
                     // Incluir parcelas creadas en el paso 9
                     const datosCompletos = {
                       ...formData,
@@ -1162,10 +1153,8 @@ export default function ComenzarHuerta() {
                       })
                       
                       const result = await response.json()
-                      console.log('📨 Respuesta del servidor:', result)
 
                       if (response.ok && result.success) {
-                        console.log('✅ Parcelas guardadas en BD')
                         localStorage.setItem('greenrouse-onboarding', JSON.stringify(datosCompletos))
                         alert('✅ Parcelas guardadas correctamente')
                         nextPaso()
@@ -1174,13 +1163,11 @@ export default function ComenzarHuerta() {
                     }
                     
                     // Si no está autenticado, solo guardar localmente y continuar
-                    console.log('💾 Guardando parcelas localmente')
                     localStorage.setItem('greenrouse-onboarding', JSON.stringify(datosCompletos))
                     localStorage.setItem('greenrouse-parcelas-temp', JSON.stringify(formData.parcelas || []))
                     nextPaso()
                     
-                  } catch (error) {
-                    console.error('❌ Error guardando parcelas:', error)
+                  } catch {
                     // En caso de error, guardar localmente y continuar
                     const datosCompletos = {
                       ...formData,

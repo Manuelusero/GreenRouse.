@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import Usuario from '@/models/Usuario'
+import Logger from '@/lib/logger'
 
 // GET /api/usuarios - Obtener todos los usuarios
 // POST /api/usuarios - Crear nuevo usuario
@@ -14,12 +15,11 @@ export async function GET() {
       data: usuarios,
       count: usuarios.length
     })
-  } catch (error: any) {
-    console.error('Error obteniendo usuarios:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'Error interno del servidor'
-    }, { status: 500 })
+  } catch (error: unknown) {
+    Logger.error('GET /api/usuarios error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+    return NextResponse.json({ success: false, error: 'Error interno del servidor' }, { status: 500 })
   }
 }
 
@@ -65,29 +65,22 @@ export async function POST(request: NextRequest) {
       message: 'Usuario creado exitosamente'
     }, { status: 201 })
 
-  } catch (error: any) {
-    console.error('Error creando usuario:', error)
-    
-    // Errores de validación de Mongoose
-    if (error.name === 'ValidationError') {
-      const errorMessages = Object.values(error.errors).map((err: any) => err.message)
-      return NextResponse.json({
-        success: false,
-        error: errorMessages[0]
-      }, { status: 400 })
+  } catch (error: unknown) {
+    Logger.error('POST /api/usuarios error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+
+    if (error instanceof Error && error.name === 'ValidationError') {
+      const mongoErr = error as Error & { errors: Record<string, { message: string }> }
+      const msgs = Object.values(mongoErr.errors).map(e => e.message)
+      return NextResponse.json({ success: false, error: msgs[0] }, { status: 400 })
     }
 
-    // Error de duplicado (email único)
-    if (error.code === 11000) {
-      return NextResponse.json({
-        success: false,
-        error: 'Ya existe un usuario con este email'
-      }, { status: 400 })
+    const withCode = error as { code?: number }
+    if (withCode.code === 11000) {
+      return NextResponse.json({ success: false, error: 'Ya existe un usuario con este email' }, { status: 400 })
     }
 
-    return NextResponse.json({
-      success: false,
-      error: 'Error interno del servidor'
-    }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Error interno del servidor' }, { status: 500 })
   }
 }

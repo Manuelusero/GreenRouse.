@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import CacheService from '@/lib/cache'
+import Logger from '@/lib/logger'
 
 // GET /api/cache/stats - Obtener estadísticas del caché
 export async function GET(request: NextRequest) {
@@ -12,11 +13,12 @@ export async function GET(request: NextRequest) {
       health: healthCheck,
       timestamp: new Date().toISOString()
     })
-  } catch (error: any) {
-    console.error('Error obteniendo estadísticas de caché:', error)
+  } catch (error: unknown) {
+    Logger.error('GET /api/cache error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
     return NextResponse.json({ 
-      error: 'Error obteniendo estadísticas',
-      details: error.message 
+      error: 'Error obteniendo estadísticas'
     }, { status: 500 })
   }
 }
@@ -47,11 +49,12 @@ export async function DELETE(request: NextRequest) {
         timestamp: new Date().toISOString()
       })
     }
-  } catch (error: any) {
-    console.error('Error limpiando caché:', error)
+  } catch (error: unknown) {
+    Logger.error('DELETE /api/cache error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
     return NextResponse.json({ 
-      error: 'Error limpiando caché',
-      details: error.message 
+      error: 'Error limpiando caché'
     }, { status: 500 })
   }
 }

@@ -7,6 +7,10 @@ import CacheService from '@/lib/cache'
 import Logger from '@/lib/logger'
 import { withLogging, withCacheLogging } from '@/lib/loggingMiddleware'
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 // GET /api/parcelas - Obtener todas las parcelas del usuario con paginación y caché
 const GET_handler = async (request: NextRequest) => {
   try {
@@ -56,7 +60,7 @@ const GET_handler = async (request: NextRequest) => {
     }
     
     // Construir filtro de búsqueda
-    const filtro: any = { usuarioEmail: userId }
+    const filtro: Record<string, unknown> = { usuarioEmail: userId }
     
     if (estado && estado !== 'todos') {
       filtro.estado = estado
@@ -67,10 +71,11 @@ const GET_handler = async (request: NextRequest) => {
     }
     
     if (busqueda) {
+      const safe = escapeRegex(busqueda)
       filtro.$or = [
-        { nombre: { $regex: busqueda, $options: 'i' } },
-        { descripcion: { $regex: busqueda, $options: 'i' } },
-        { cultivos: { $in: [new RegExp(busqueda, 'i')] } }
+        { nombre: { $regex: safe, $options: 'i' } },
+        { descripcion: { $regex: safe, $options: 'i' } },
+        { cultivos: { $in: [new RegExp(safe, 'i')] } }
       ]
     }
     
@@ -113,10 +118,9 @@ const GET_handler = async (request: NextRequest) => {
     const finalResponse = NextResponse.json(response)
     finalResponse.headers.set('X-Cache', 'MISS')
     return finalResponse
-  } catch (error: any) {
+  } catch (error: unknown) {
     Logger.error('Error obteniendo parcelas', {
-      error: error.message,
-      stack: error.stack,
+      error: error instanceof Error ? error.message : String(error),
       url: request.url
     })
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
@@ -126,12 +130,10 @@ const GET_handler = async (request: NextRequest) => {
 // Aplicar middleware de logging
 export const GET = withCacheLogging(GET_handler)
 
-export async function POST(request: NextRequest) {
+const POST_handler = async (request: NextRequest) => {
   try {
     await connectDB()
     const body = await request.json()
-    
-    console.log('📝 Datos recibidos en API parcelas:', JSON.stringify(body, null, 2))
     
     // Estructura nueva para creación automática
     const { 
@@ -157,7 +159,7 @@ export async function POST(request: NextRequest) {
     // Determinar si es creación automática o manual
     const esCreacionAutomatica = !!configuracion_inicial?.generado_automaticamente
     
-    let parcelaData: any = {}
+    let parcelaData: Record<string, unknown> = {}
     
     if (esCreacionAutomatica) {
       // Creación automática desde el perfil
@@ -169,11 +171,9 @@ export async function POST(request: NextRequest) {
       const usuarioObjectId = new mongoose.Types.ObjectId(usuario_id)
       const usuario = await Usuario.findById(usuarioObjectId)
       if (!usuario) {
-        console.error('❌ Usuario no encontrado con ID:', usuario_id)
+        Logger.warn('POST /api/parcelas: usuario no encontrado', { usuario_id })
         return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
       }
-      
-      console.log('👤 Usuario encontrado:', usuario.email)
 
       parcelaData = {
         usuarioEmail: usuario.email,
@@ -200,22 +200,20 @@ export async function POST(request: NextRequest) {
       }
 
       // Verificar que el usuario existe
-      console.log('🔍 Buscando usuario con email:', usuarioEmail)
       const usuario = await Usuario.findOne({ email: usuarioEmail })
-      console.log('👤 Usuario encontrado:', usuario ? 'SÍ' : 'NO')
       
       if (!usuario) {
         // Intentar crear el usuario si no existe
-        console.log('⚠️ Usuario no existe, creando nuevo usuario...')
         try {
-          const nuevoUsuario = await Usuario.create({
+          await Usuario.create({
             email: usuarioEmail,
             nombre: usuarioEmail.split('@')[0],
             provider: 'google'
           })
-          console.log('✅ Usuario creado:', nuevoUsuario.email)
-        } catch (createError) {
-          console.error('❌ Error creando usuario:', createError)
+        } catch (createError: unknown) {
+          Logger.error('POST /api/parcelas: error creando usuario fallback', {
+            error: createError instanceof Error ? createError.message : String(createError)
+          })
           return NextResponse.json({ error: 'Error creando usuario' }, { status: 500 })
         }
       }
@@ -232,28 +230,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('💾 Datos de parcela a crear:', JSON.stringify(parcelaData, null, 2))
-
     // Crear nueva parcela
     const nuevaParcela = await Parcela.create(parcelaData)
 
-    console.log('✅ Parcela creada exitosamente:', nuevaParcela._id)
-    
     // Invalidar caché del usuario después de crear una parcela
-    await CacheService.invalidateUser(usuarioEmail || parcelaData.usuarioEmail)
-    console.log('🗑️ Cache invalidado para usuario:', usuarioEmail || parcelaData.usuarioEmail)
+    await CacheService.invalidateUser((usuarioEmail || parcelaData.usuarioEmail) as string)
     
     return NextResponse.json(nuevaParcela, { status: 201 })
 
-  } catch (error: any) {
-    console.error('Error creando parcela:', error)
+  } catch (error: unknown) {
+    Logger.error('POST /api/parcelas error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
     
-    // Errores de validación de Mongoose
-    if (error.name === 'ValidationError') {
-      const errorMessages = Object.values(error.errors).map((err: any) => err.message)
-      return NextResponse.json({ error: errorMessages[0] }, { status: 400 })
+    if (error instanceof Error && error.name === 'ValidationError') {
+      const mongoErr = error as Error & { errors: Record<string, { message: string }> }
+      const msgs = Object.values(mongoErr.errors).map(e => e.message)
+      return NextResponse.json({ error: msgs[0] }, { status: 400 })
     }
 
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
+
+export const POST = withLogging(POST_handler)

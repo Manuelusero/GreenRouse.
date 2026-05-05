@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
 import PlantaAsociacion from '@/models/PlantaAsociacion'
+import Logger from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -104,14 +105,12 @@ export async function POST(request: NextRequest) {
       },
       detalles
     })
-  } catch (error: any) {
-    console.error('Error en recomendaciones:', error)
+  } catch (error: unknown) {
+    Logger.error('GET /api/asociaciones/recomendaciones error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Error al obtener recomendaciones',
-        message: error.message
-      },
+      { success: false, error: 'Error al obtener recomendaciones' },
       { status: 500 }
     )
   }

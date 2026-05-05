@@ -52,10 +52,9 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Recursos</h3>
             <ul className="space-y-2">
               <li><Link href="/calculadora" className="text-gray-400 hover:text-white transition-colors">Calculadora</Link></li>
-              <li><Link href="/guias" className="text-gray-400 hover:text-white transition-colors">Guías de Cultivo</Link></li>
-              <li><Link href="/calendario" className="text-gray-400 hover:text-white transition-colors">Calendario Lunar</Link></li>
-              <li><Link href="/comunidad" className="text-gray-400 hover:text-white transition-colors">Comunidad</Link></li>
-              <li><Link href="/faq" className="text-gray-400 hover:text-white transition-colors">FAQ</Link></li>
+              <li><Link href="/verduras" className="text-gray-400 hover:text-white transition-colors">Enciclopedia</Link></li>
+              <li><Link href="/asociaciones" className="text-gray-400 hover:text-white transition-colors">Asociaciones</Link></li>
+              <li><Link href="/blog" className="text-gray-400 hover:text-white transition-colors">Blog & Guías</Link></li>
             </ul>
           </div>
 

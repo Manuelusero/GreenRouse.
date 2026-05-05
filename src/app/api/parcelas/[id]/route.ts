@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import mongoose from 'mongoose'
 import connectDB from '@/lib/mongodb'
 import Parcela from '@/models/Parcela'
+import Logger from '@/lib/logger'
 
 // DELETE /api/parcelas/[id] - Eliminar una parcela específica
 export async function DELETE(
@@ -25,15 +26,15 @@ export async function DELETE(
       return NextResponse.json({ error: 'Parcela no encontrada' }, { status: 404 })
     }
     
-    console.log('🗑️ Parcela eliminada:', parcelaEliminada._id)
-    
     return NextResponse.json({ 
       message: 'Parcela eliminada exitosamente',
       parcela: parcelaEliminada 
     }, { status: 200 })
     
-  } catch (error: any) {
-    console.error('Error eliminando parcela:', error)
+  } catch (error: unknown) {
+    Logger.error('DELETE /api/parcelas/[id] error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
@@ -62,8 +63,10 @@ export async function GET(
     
     return NextResponse.json(parcela)
     
-  } catch (error: any) {
-    console.error('Error obteniendo parcela:', error)
+  } catch (error: unknown) {
+    Logger.error('GET /api/parcelas/[id] error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
@@ -95,17 +98,17 @@ export async function PUT(
       return NextResponse.json({ error: 'Parcela no encontrada' }, { status: 404 })
     }
     
-    console.log('✅ Parcela actualizada:', parcelaActualizada._id)
-    
     return NextResponse.json(parcelaActualizada)
     
-  } catch (error: any) {
-    console.error('Error actualizando parcela:', error)
-    
-    // Errores de validación de Mongoose
-    if (error.name === 'ValidationError') {
-      const errorMessages = Object.values(error.errors).map((err: any) => err.message)
-      return NextResponse.json({ error: errorMessages[0] }, { status: 400 })
+  } catch (error: unknown) {
+    Logger.error('PUT /api/parcelas/[id] error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+
+    if (error instanceof Error && error.name === 'ValidationError') {
+      const mongoErr = error as Error & { errors: Record<string, { message: string }> }
+      const msgs = Object.values(mongoErr.errors).map(e => e.message)
+      return NextResponse.json({ error: msgs[0] }, { status: 400 })
     }
     
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

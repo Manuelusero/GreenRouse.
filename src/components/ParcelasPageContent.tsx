@@ -9,21 +9,16 @@ interface ParcelasPageContentProps {
 }
 
 function ParcelasPageContent({ userEmail }: ParcelasPageContentProps) {
-  console.log('📧 ParcelasPageContent recibió userEmail:', userEmail)
-  
-  const handleEditParcela = (parcela: any) => {
-    // Lógica para editar parcela
-    console.log('Editar parcela:', parcela)
+  const handleEditParcela = (_parcela: any) => {
+    // Implementar modal de edición
   }
 
-  const handleDeleteParcela = (id: string) => {
-    // Lógica para eliminar parcela
-    console.log('Eliminar parcela:', id)
+  const handleDeleteParcela = (_id: string) => {
+    // Implementar confirmación de eliminación
   }
 
-  const handleViewParcela = (parcela: any) => {
-    // Lógica para ver parcela
-    console.log('Ver parcela:', parcela)
+  const handleViewParcela = (_parcela: any) => {
+    // Implementar vista detalle
   }
 
   return (

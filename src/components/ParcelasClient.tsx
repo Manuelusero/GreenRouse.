@@ -51,7 +51,6 @@ function ParcelasClient({ parcelas: initialParcelas, userEmail }: ParcelasClient
 
   const handleCreateParcela = async (nuevaParcela: Omit<Parcela, '_id' | 'usuarioEmail'>) => {
     setIsLoading(true)
-    console.log('🚀 Creando parcela con datos:', { ...nuevaParcela, usuarioEmail: userEmail })
     
     try {
       const response = await fetch('/api/parcelas', {
@@ -65,20 +64,15 @@ function ParcelasClient({ parcelas: initialParcelas, userEmail }: ParcelasClient
         }),
       })
 
-      console.log('📡 Response status:', response.status)
-      
       if (response.ok) {
         const parcelaCreada = await response.json()
-        console.log('✅ Parcela creada exitosamente:', parcelaCreada)
         setParcelas([...parcelas, parcelaCreada])
         setIsModalOpen(false)
       } else {
         const errorData = await response.json()
-        console.error('❌ Error creando parcela:', response.status, errorData)
         alert(`Error: ${errorData.error || 'No se pudo crear la parcela'}`)
       }
     } catch (error) {
-      console.error('💥 Error de red:', error)
       alert('Error de conexión. Verifica tu conexión a internet.')
     } finally {
       setIsLoading(false)
@@ -324,7 +318,6 @@ function FormularioNuevaParcela({
           setCultivosRecomendados(cultivos)
         }
       } catch (error) {
-        console.error('Error obteniendo datos del usuario:', error)
         // Default: cultivos de primavera/verano para Argentina
         const cultivos = obtenerCultivosEstacionales('argentina')
         setCultivosRecomendados(cultivos)

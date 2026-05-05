@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 import connectDB from '@/lib/mongodb'
 import Usuario from '@/models/Usuario'
 import CacheService from '@/lib/cache'
+import Logger from '@/lib/logger'
 
 // GET /api/usuarios/[id] - Obtener usuario con caché
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -14,15 +15,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Intentar obtener del caché primero
     const cached = await CacheService.get('usuario', userId)
     if (cached) {
-      console.log(`📦 Cache HIT para usuario: ${userId}`)
       return NextResponse.json({
         ...cached,
         cached: true,
         timestamp: new Date().toISOString()
       })
     }
-    
-    console.log(`🔍 Cache MISS para usuario: ${userId}`)
     
     const usuario = await Usuario.findById(userId).select('-password -__v')
     
@@ -38,11 +36,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     
     // Guardar en caché por 1 hora
     await CacheService.set('usuario', userId, response)
-    console.log(`💾 Cache SET para usuario: ${userId}`)
     
     return NextResponse.json(response)
-  } catch (error: any) {
-    console.error('Error obteniendo usuario:', error)
+  } catch (error: unknown) {
+    Logger.error('GET /api/usuarios/[id] error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
@@ -67,19 +66,20 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     
     // Invalidar caché del usuario
     await CacheService.del('usuario', userId)
-    console.log(`🗑️ Cache invalidado para usuario: ${userId}`)
     
     // También invalidar caché de parcelas del usuario
     await CacheService.invalidateUser(usuario.email)
-    console.log(`🗑️ Cache de parcelas invalidado para email: ${usuario.email}`)
     
     return NextResponse.json(usuario)
-  } catch (error: any) {
-    console.error('Error actualizando usuario:', error)
-    
-    if (error.name === 'ValidationError') {
-      const errorMessages = Object.values(error.errors).map((err: any) => err.message)
-      return NextResponse.json({ error: errorMessages[0] }, { status: 400 })
+  } catch (error: unknown) {
+    Logger.error('PUT /api/usuarios/[id] error', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+
+    if (error instanceof Error && error.name === 'ValidationError') {
+      const mongoErr = error as Error & { errors: Record<string, { message: string }> }
+      const msgs = Object.values(mongoErr.errors).map(e => e.message)
+      return NextResponse.json({ error: msgs[0] }, { status: 400 })
     }
     
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

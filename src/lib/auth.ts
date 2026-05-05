@@ -4,6 +4,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
 import connectDB from '@/lib/mongodb'
 import Usuario from '@/models/Usuario'
+import Logger from '@/lib/logger'
 
 // Importar tipos correctos de NextAuth
 import type { DefaultSession } from 'next-auth'
@@ -86,9 +87,8 @@ export const authOptions: AuthOptions = {
               image: user.avatar || null
             }
           }
-        } catch (error: any) {
-          console.error('Error en autenticación:', error)
-          throw new Error(error.message || 'Error en autenticación')
+        } catch (error: unknown) {
+          throw new Error(error instanceof Error ? error.message : 'Error en autenticación')
         }
       }
     })
@@ -104,11 +104,7 @@ export const authOptions: AuthOptions = {
   
   callbacks: {
     async signIn({ user, account, profile, isNewUser }: { user: any; account: any; profile?: any; isNewUser?: boolean }) {
-      console.log('🔐 [AUTH CALLBACK] signIn iniciado:', {
-        email: user.email,
-        provider: account?.provider,
-        isNewUser
-      })
+      Logger.info('[AUTH] signIn iniciado', { email: user.email, provider: account?.provider, isNewUser })
       
       // Para email magic link, también necesitamos el ID
       if (account?.provider === 'email') {
@@ -119,7 +115,7 @@ export const authOptions: AuthOptions = {
             user.id = existingUser._id.toString()
           }
         } catch (error) {
-          console.error('❌ [AUTH CALLBACK] Error obteniendo usuario para email:', error)
+          Logger.error('[AUTH] Error obteniendo usuario para email', { error: error instanceof Error ? error.message : error })
         }
       }
       
@@ -133,7 +129,7 @@ export const authOptions: AuthOptions = {
           
           if (!existingUser) {
             // Crear nuevo usuario con datos completos de Google
-            console.log('🆕 [AUTH CALLBACK] Creando nuevo usuario con Google:', user.email)
+            Logger.info('[AUTH] Creando nuevo usuario con Google', { email: user.email })
             existingUser = await Usuario.create({
               email: user.email?.toLowerCase(),
               nombre: user.name || user.email?.split('@')[0],
@@ -151,9 +147,9 @@ export const authOptions: AuthOptions = {
                 completadoAutomaticamente: true
               }
             })
-            console.log('✅ [AUTH CALLBACK] Usuario creado con ID:', existingUser._id)
+            Logger.info('[AUTH] Usuario Google DB', { created: !existingUser.perfil?.fechaRegistro, id: existingUser._id })
           } else {
-            console.log('👤 [AUTH CALLBACK] Usuario existente encontrado:', existingUser._id)
+            Logger.info('[AUTH] Usuario existente', { id: existingUser._id })
             // Actualizar avatar si cambió y marcar como datos actualizados
             if (user.image && existingUser.avatar !== user.image) {
               existingUser.avatar = user.image
@@ -164,17 +160,17 @@ export const authOptions: AuthOptions = {
               existingUser.perfil.imagenGoogle = user.image
               existingUser.perfil.ultimaActualizacion = new Date()
               await existingUser.save()
-              console.log('🔄 [AUTH CALLBACK] Avatar actualizado para usuario:', existingUser._id)
+              Logger.info('[AUTH] Avatar actualizado', { id: existingUser._id })
             }
           }
           
           // Asignar el ID de MongoDB al user object
           user.id = existingUser._id.toString()
 
-          console.log('✅ [AUTH CALLBACK] SignIn callback completado')
+          Logger.info('[AUTH] SignIn completado', { email: user.email, id: user.id })
           return true
         } catch (error) {
-          console.error('❌ [AUTH CALLBACK] Error en signIn callback:', error)
+          Logger.error('[AUTH] Error en signIn callback', { error: error instanceof Error ? error.message : error })
           return true // Permitir login pero loggear el error
         }
       }
@@ -200,7 +196,7 @@ export const authOptions: AuthOptions = {
             token.id = dbUser._id.toString()
           }
         } catch (error) {
-          console.error('❌ Error obteniendo ID de usuario:', error)
+          Logger.error('[AUTH] Error obteniendo ID de usuario', { error: error instanceof Error ? error.message : error })
         }
       }
       
@@ -247,11 +243,8 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   
   events: {
-    async signIn({ user, account, profile, isNewUser }: { user: any; account: any; profile?: any; isNewUser?: boolean }) {
-      console.log('✅ Usuario ha iniciado sesión:', user.email)
-      if (isNewUser) {
-        console.log('🆕 Nuevo usuario detectado')
-      }
+    async signIn({ user, isNewUser }: { user: any; account: any; profile?: any; isNewUser?: boolean }) {
+      Logger.info('[AUTH] Usuario inició sesión', { email: user.email, isNewUser })
     }
   }
 }

@@ -12,8 +12,7 @@ async function getUserParcelas(userId: string) {
     await connectDB()
     const parcelas = await Parcela.find({ usuarioEmail: userId }).sort({ createdAt: -1 })
     return JSON.parse(JSON.stringify(parcelas)) // Serializar para Next.js
-  } catch (error) {
-    console.error('Error fetching parcelas:', error)
+  } catch {
     return []
   }
 }

@@ -303,8 +303,7 @@ export async function obtenerRecomendacionesConClima(
       datosClima: climaData.data
     }
     
-  } catch (error) {
-    console.error('Error obteniendo clima:', error)
+  } catch {
     // Fallback a recomendaciones básicas
     return obtenerRecomendacionesInteligentes(paisCodigo, undefined, tamaño)
   }

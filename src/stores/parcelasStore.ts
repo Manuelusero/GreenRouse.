@@ -166,7 +166,6 @@ export const useParcelasStore = create<ParcelasState>()(
       fetchParcelas: async (userId, page = 1, limit = 10) => {
         const { filtros } = get();
 
-        console.log('🔍 fetchParcelas llamado con:', { userId, page, limit, filtros })
         set({ loading: true, error: null });
 
         try {
@@ -182,18 +181,14 @@ export const useParcelasStore = create<ParcelasState>()(
           if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
 
           const url = `/api/parcelas?${params}`
-          console.log('📡 Haciendo fetch a:', url)
 
           const response = await fetch(url);
-
-          console.log('📡 Response status:', response.status)
 
           if (!response.ok) {
             throw new Error(`Error: ${response.status}`);
           }
 
           const data = await response.json();
-          console.log('📊 Datos recibidos:', data)
 
           set({
             parcelas: data.parcelas,
@@ -208,7 +203,6 @@ export const useParcelasStore = create<ParcelasState>()(
             loading: false,
           });
         } catch (error) {
-          console.error('❌ Error en fetchParcelas:', error)
           set({
             error: error instanceof Error ? error.message : "Error desconocido",
             loading: false,

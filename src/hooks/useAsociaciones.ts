@@ -60,12 +60,12 @@ export function useAsociaciones(cultivos: string[]) {
         } else {
           throw new Error(data.error || 'Error desconocido')
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         setRecomendaciones({
           recomendadas: [],
           no_recomendadas: [],
           loading: false,
-          error: error.message
+          error: error instanceof Error ? error.message : 'Error desconocido'
         })
       }
     }

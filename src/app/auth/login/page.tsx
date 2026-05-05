@@ -54,17 +54,11 @@ export default function LogixnPage() {
         callbackUrl: '/perfil' // Especificar URL de redirección
       })
 
-      console.log('🔐 [LOGIN] Resultado signIn:', { ok: result?.ok, error: result?.error })
-      
       if (result?.error) {
-        console.log('❌ [LOGIN] Error en signIn:', result.error)
         setError(result.error)
-      } else if (result?.ok) {
-        console.log('✅ [LOGIN] Login exitoso, NextAuth debería redirigir automáticamente...')
-        // NextAuth manejará la redirección automáticamente
       }
-    } catch (error: any) {
-      setError(error.message || 'Error en autenticación')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Error en autenticación')
     }
 
     setLoading(false)
@@ -193,7 +187,6 @@ export default function LogixnPage() {
               {/* Google Login */}
               <button
                 onClick={async () => {
-                  console.log('🔐 Iniciando login con Google...')
                   await signIn('google', { 
                     callbackUrl: '/perfil',
                     redirect: true 
