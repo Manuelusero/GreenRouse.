@@ -3,35 +3,27 @@ import Footer from '@/components/Footer'
 import { getServerSession } from 'next-auth/next'
 import { redirect } from 'next/navigation'
 import ParcelasPageContent from '@/components/ParcelasPageContent'
-import connectDB from '@/lib/mongodb'
-import Parcela from '@/models/Parcela'
 
-// Función para obtener las parcelas del usuario desde la base de datos
-async function getUserParcelas(userId: string) {
-  try {
-    await connectDB()
-    const parcelas = await Parcela.find({ usuarioEmail: userId }).sort({ createdAt: -1 })
-    return JSON.parse(JSON.stringify(parcelas)) // Serializar para Next.js
-  } catch {
-    return []
-  }
-}
+type PageProps = { searchParams: Promise<{ mode?: string; from?: string }> }
 
-export default async function ParcelasPage() {
+export default async function ParcelasPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const isLocalMode = params.mode === 'local'
+
   const session = await getServerSession()
-  
-  // Redirigir si no está autenticado
-  if (!session) {
+
+  // Solo redirigir a login si no hay sesión Y no es modo local
+  if (!session && !isLocalMode) {
     redirect('/auth/login')
   }
-
-  // Obtener las parcelas del usuario
-  const parcelas = await getUserParcelas(session.user?.email || '')
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <ParcelasPageContent userEmail={session.user?.email || ''} />
+      <ParcelasPageContent
+        userEmail={session?.user?.email || ''}
+        localMode={isLocalMode && !session}
+      />
       <Footer />
     </div>
   )

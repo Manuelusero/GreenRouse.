@@ -1,19 +1,22 @@
 'use client'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import ParcelaVisualGrid from '@/components/ParcelaVisualGrid'
 import ParcelaTextoDistribucion from '@/components/ParcelaTextoDistribucion'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function ParcelaDetalle({ params }: { params: Promise<{ id: string }> }) {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editMode = searchParams.get('edit') === 'true'
   const [id, setId] = useState('')
   const [parcela, setParcela] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [seccionActiva, setSeccionActiva] = useState('visual')
+  const [seccionActiva, setSeccionActiva] = useState(editMode ? 'plan' : 'visual')
   const [mounted, setMounted] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
@@ -25,20 +28,21 @@ export default function ParcelaDetalle({ params }: { params: Promise<{ id: strin
   }, [params])
 
   useEffect(() => {
-    if (id && session?.user) {
-      fetchParcela()
+    if (!id) return
+    if (status === 'loading') return  // esperar a que la sesión resuelva
+    if (status === 'unauthenticated') {
+      router.push('/auth/login')
+      return
     }
-  }, [id, session])
+    fetchParcela()
+  }, [id, status])
 
   const fetchParcela = async () => {
     try {
-      const response = await fetch(`/api/parcelas?userId=${session?.user?.email}`)
+      const response = await fetch(`/api/parcelas/${id}`)
       if (response.ok) {
-        const parcelas = await response.json()
-        const parcelaEncontrada = parcelas.find((p: any) => p._id === id)
-        if (parcelaEncontrada) {
-          setParcela(parcelaEncontrada)
-        }
+        const data = await response.json()
+        setParcela(data)
       }
     } catch {
       // silent — loading state handles the error UI
@@ -194,7 +198,8 @@ export default function ParcelaDetalle({ params }: { params: Promise<{ id: strin
           <div className="border-b border-gray-200">
             <nav className="flex">
               {[
-                { id: 'visual', label: 'Plan de Plantación', icon: '📋' },
+                              { id: 'visual', label: 'Vista del Cantero', icon: '🌱' },
+                { id: 'plan', label: 'Plan de Siembra', icon: '📋' },
                 { id: 'info', label: 'Información', icon: '📊' },
                 { id: 'cuidados', label: 'Cuidados', icon: '💧' }
               ].map((tab) => (
@@ -215,9 +220,9 @@ export default function ParcelaDetalle({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className="p-6">
-            {/* Vista de Distribución */}
+                        {/* Vista visual del cantero — bird's eye view */}
             {seccionActiva === 'visual' && mounted && (
-              <ParcelaTextoDistribucion
+              <ParcelaVisualGrid
                 nombre={parcela.nombre}
                 cultivos={parcela.cultivos || []}
                 area={parcela.area || 10}
@@ -228,7 +233,24 @@ export default function ParcelaDetalle({ params }: { params: Promise<{ id: strin
             {seccionActiva === 'visual' && !mounted && (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Preparando distribución...</p>
+                <p className="text-gray-600">Preparando vista del cantero...</p>
+              </div>
+            )}
+
+            {/* Plan detallado de siembra */}
+            {seccionActiva === 'plan' && mounted && (
+              <ParcelaTextoDistribucion
+                nombre={parcela.nombre}
+                cultivos={parcela.cultivos || []}
+                area={parcela.area || 10}
+                dimensiones={parcela.dimensiones}
+                onEdit={handleEditParcela}
+              />
+            )}
+            {seccionActiva === 'plan' && !mounted && (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Preparando plan...</p>
               </div>
             )}
 

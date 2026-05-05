@@ -14,7 +14,7 @@ Crea un nuevo API Route Handler para el recurso `${input:nombre_recurso}` en `sr
 5. **Escapar strings** para `$regex` usando:
    ```typescript
    function escapeRegex(str: string): string {
-     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
    }
    ```
 6. **Tipos**: `Record<string, unknown>` para filtros, NUNCA `any`

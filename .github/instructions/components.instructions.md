@@ -7,17 +7,20 @@ applyTo: "src/components/**"
 ## Server vs Client Components
 
 ### Server Components (default — no marcar con nada)
+
 - `page.tsx` y `layout.tsx` son Server Components por defecto
 - Hacer fetch de datos y verificar auth en el Server Component
 - Pasar datos como props al Client Component hijo
 - NUNCA usar hooks (`useState`, `useEffect`, etc.) en Server Components
 
 ### Client Components (`'use client'` al tope del archivo)
+
 - Obligatorio cuando el componente usa: hooks de React, event handlers, estado local, efectos
 - Obligatorio cuando usa: `useSession`, `useRouter`, `usePathname`, cualquier hook de browser
 - Todos los componentes en `src/components/` con interactividad deben tener `'use client'`
 
 ### Patrón establecido: Server Page → Client Component
+
 ```typescript
 // src/app/parcelas/page.tsx (Server Component)
 import { getServerSession } from 'next-auth'
@@ -28,7 +31,7 @@ import ParcelasClient from '@/components/ParcelasClient'
 export default async function ParcelasPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/auth/login')
-  
+
   return <ParcelasClient userEmail={session.user?.email ?? ''} />
 }
 
@@ -42,7 +45,9 @@ export default function ParcelasClient({ userEmail }: { userEmail: string }) {
 ## Performance
 
 ### React.memo
+
 Usar en componentes que renderizan listas o reciben props estables:
+
 ```typescript
 const ParcelaCard = React.memo(function ParcelaCard({ parcela }: Props) {
   return (...)
@@ -50,7 +55,9 @@ const ParcelaCard = React.memo(function ParcelaCard({ parcela }: Props) {
 ```
 
 ### Lazy loading con dynamic()
+
 Para componentes pesados que no son necesarios en el render inicial:
+
 ```typescript
 import dynamic from 'next/dynamic'
 
@@ -65,7 +72,7 @@ const MonitoringDashboard = dynamic(() => import('./MonitoringDashboard'), {
 - **Estado compartido** → Zustand store (parcelasStore, authStore)
 - **Props normales** → pasar directamente padre → hijo
 - **NO usar `window.dispatchEvent`** para comunicación — es frágil y dificulta el testing
-- El Header ya usa `window.addEventListener('nombreActualizado')` para compatibilidad hacia atrás, 
+- El Header ya usa `window.addEventListener('nombreActualizado')` para compatibilidad hacia atrás,
   pero NO reproducir este patrón en componentes nuevos — usar Zustand
 
 ## Tailwind CSS
@@ -82,8 +89,8 @@ const MonitoringDashboard = dynamic(() => import('./MonitoringDashboard'), {
 - Usar el hook `useHydration()` de `@/hooks/useHydration` cuando se necesite evitar el mismatch de SSR/client en el Header
 - Para estados que dependen de `window` o localStorage, verificar `isHydrated` antes de renderizar:
   ```typescript
-  const isHydrated = useHydration()
-  if (!isHydrated) return null // o un skeleton
+  const isHydrated = useHydration();
+  if (!isHydrated) return null; // o un skeleton
   ```
 
 ## Skeletons y loading states
@@ -110,5 +117,5 @@ const MonitoringDashboard = dynamic(() => import('./MonitoringDashboard'), {
 - NO importar `ChatVerduras` — ese componente está eliminado de la app
 - NO crear páginas de calendario — feature eliminada
 - NO agregar librerías de UI externas (shadcn, MUI, Chakra, etc.)
-- NO hacer fetch directo desde Client Components con `useEffect` para datos iniciales — 
+- NO hacer fetch directo desde Client Components con `useEffect` para datos iniciales —
   preferir que la page.tsx (Server Component) haga el fetch y lo pase como props

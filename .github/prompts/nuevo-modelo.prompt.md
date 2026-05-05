@@ -26,6 +26,7 @@ ${input:descripcion_campos}
 ## Índices típicos para este modelo
 
 Basándome en el nombre y descripción, generar los índices que tendrían sentido para:
+
 - Queries por usuario (`usuarioEmail`)
 - Ordenamiento por fecha (`createdAt: -1`, `publishedAt: -1`)
 - Búsqueda por campos únicos (`slug`)

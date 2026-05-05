@@ -1,9 +1,11 @@
 # GreenRouse — Copilot Instructions
 
 ## Qué es este proyecto
+
 GreenRouse es una plataforma web para jardinería orgánica y permacultura en español, orientada al mercado latinoamericano (Argentina como mercado principal). Permite a los usuarios gestionar parcelas de cultivo, consultar una enciclopedia de verduras, calcular capacidad de siembra, leer artículos de blog y acceder a cursos de permacultura.
 
 ## Stack técnico (no cambiar sin consenso)
+
 - **Framework**: Next.js 15.5 con App Router — NO usar Pages Router
 - **Lenguaje**: TypeScript 5 estricto — NO usar `any` salvo excepción documentada
 - **UI**: React 18 + Tailwind CSS 3 — NO agregar otras librerías de UI (no shadcn, no MUI)
@@ -17,6 +19,7 @@ GreenRouse es una plataforma web para jardinería orgánica y permacultura en es
 - **Deploy**: Vercel — tener en cuenta edge limits
 
 ## Estructura del proyecto
+
 ```
 src/
   app/           # Next.js App Router — pages y API routes
@@ -34,6 +37,7 @@ src/
 ## Convenciones de código
 
 ### Componentes React
+
 - Los page.tsx son Server Components por defecto — NO marcar como `'use client'` salvo necesidad real
 - Los componentes con estado, efectos o event handlers DEBEN tener `'use client'`
 - Seguir el patrón Server Page → Client Component: la page.tsx hace el fetch/auth, pasa data al Client
@@ -42,6 +46,7 @@ src/
 - NO usar `window.dispatchEvent` custom events para comunicación — usar Zustand
 
 ### API Routes
+
 - Siempre en `src/app/api/[recurso]/route.ts`
 - Envolver todos los handlers con `withLogging` de `@/lib/loggingMiddleware`
 - Patrón: handler interno (async function) wrapeado por `withLogging` en el export
@@ -52,6 +57,7 @@ src/
 - Headers de respuesta: agregar `X-Cache: HIT|MISS` y `X-Response-Time`
 
 ### Modelos Mongoose
+
 - Siempre incluir `{ timestamps: true }` en el Schema
 - Definir índices compuestos para todos los campos que se filtran juntos
 - El campo `usuarioEmail` (string) es el identificador de usuario actual — `usuario_id` (ObjectId) es deuda técnica en Parcela, no usar en modelos nuevos
@@ -59,6 +65,7 @@ src/
 - Validar en el Schema (required, minLength, maxLength, enum) — no validar en el API handler duplicadamente
 
 ### Zustand stores
+
 - `parcelasStore.ts`: estado de parcelas con devtools, SIN persist (datos del servidor)
 - `authStore.ts`: estado de UI del perfil con devtools + persist en localStorage
 - NO crear un store sin devtools
@@ -67,63 +74,66 @@ src/
 ## Patrones establecidos (reproducir, no inventar)
 
 ### Patrón API Route completo
+
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
-import { ModelName } from '@/models/ModelName'
-import CacheService from '@/lib/cache'
-import Logger from '@/lib/logger'
-import { withLogging } from '@/lib/loggingMiddleware'
+import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import { ModelName } from "@/models/ModelName";
+import CacheService from "@/lib/cache";
+import Logger from "@/lib/logger";
+import { withLogging } from "@/lib/loggingMiddleware";
 
 const GET_handler = async (request: NextRequest) => {
   try {
-    await connectDB()
-    const { searchParams } = new URL(request.url)
-    
-    // Validar inputs
-    const param = searchParams.get('param')
-    
-    // Construir filtro (escapar strings para $regex)
-    const filtro: Record<string, unknown> = {}
-    
-    // Caché
-    const cacheKey = `resource:${param}`
-    const cached = await CacheService.get('namespace', cacheKey)
-    if (cached) {
-      const res = NextResponse.json(cached)
-      res.headers.set('X-Cache', 'HIT')
-      return res
-    }
-    
-    // Query
-    const data = await ModelName.find(filtro).lean()
-    
-    await CacheService.set('namespace', cacheKey, data, 300)
-    const res = NextResponse.json(data)
-    res.headers.set('X-Cache', 'MISS')
-    return res
-  } catch (error: unknown) {
-    Logger.error('GET /api/resource error', { error: error instanceof Error ? error.message : error })
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
-  }
-}
+    await connectDB();
+    const { searchParams } = new URL(request.url);
 
-export const GET = withLogging(GET_handler)
+    // Validar inputs
+    const param = searchParams.get("param");
+
+    // Construir filtro (escapar strings para $regex)
+    const filtro: Record<string, unknown> = {};
+
+    // Caché
+    const cacheKey = `resource:${param}`;
+    const cached = await CacheService.get("namespace", cacheKey);
+    if (cached) {
+      const res = NextResponse.json(cached);
+      res.headers.set("X-Cache", "HIT");
+      return res;
+    }
+
+    // Query
+    const data = await ModelName.find(filtro).lean();
+
+    await CacheService.set("namespace", cacheKey, data, 300);
+    const res = NextResponse.json(data);
+    res.headers.set("X-Cache", "MISS");
+    return res;
+  } catch (error: unknown) {
+    Logger.error("GET /api/resource error", {
+      error: error instanceof Error ? error.message : error,
+    });
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  }
+};
+
+export const GET = withLogging(GET_handler);
 ```
 
 ### Escapado de inputs para $regex
+
 ```typescript
 // SIEMPRE escapar antes de usar en $regex
 function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 // Uso:
-filtro.$or = [
-  { nombre: { $regex: escapeRegex(busqueda), $options: 'i' } }
-]
+filtro.$or = [{ nombre: { $regex: escapeRegex(busqueda), $options: "i" } }];
 ```
 
 ## Lo que NO hacer
+
 - NO agregar IA/LLM (ni OpenAI, ni Anthropic, ni Vercel AI SDK) — decisión de producto
 - NO agregar CMS externo (Sanity, Contentful, etc.)
 - NO agregar pasarela de pagos por ahora
@@ -134,6 +144,7 @@ filtro.$or = [
 - NO usar `error: any` en catch — siempre `error: unknown`
 
 ## Variables de entorno requeridas
+
 ```
 MONGODB_URI=          # MongoDB Atlas connection string
 NEXTAUTH_SECRET=      # openssl rand -base64 32
@@ -145,6 +156,7 @@ RESEND_API_KEY=       # Email (opcional por ahora)
 ```
 
 ## Comandos útiles
+
 ```bash
 npm run dev          # Desarrollo local (puerto 3000)
 npm run build        # Verificar build sin errores antes de PR

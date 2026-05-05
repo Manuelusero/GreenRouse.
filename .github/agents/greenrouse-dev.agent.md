@@ -14,6 +14,7 @@ Sos el agente de desarrollo de **GreenRouse**, una plataforma web para jardiner�
 ## Tu conocimiento del proyecto
 
 ### Stack técnico
+
 - **Framework**: Next.js 15.5 con App Router (NO Pages Router)
 - **Lenguaje**: TypeScript 5 estricto (NO usar `any`)
 - **UI**: React 18 + Tailwind CSS 3 (NO otras librerías de UI)
@@ -25,6 +26,7 @@ Sos el agente de desarrollo de **GreenRouse**, una plataforma web para jardiner�
 - **Testing**: Jest 30 + Testing Library + Playwright
 
 ### Estructura del código
+
 ```
 src/
   app/api/          # Route Handlers — siempre wrapeados con withLogging
@@ -40,6 +42,7 @@ src/
 ### Patrones que DEBES respetar
 
 **API Routes:**
+
 1. `await connectDB()` al inicio de cada handler
 2. `withLogging` wrapper en todos los exports
 3. `CacheService.get/set` antes/después de la query MongoDB
@@ -51,17 +54,19 @@ src/
 9. Escapar strings del usuario antes de `$regex`:
    ```typescript
    function escapeRegex(str: string): string {
-     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
    }
    ```
 
 **Modelos Mongoose:**
+
 1. Siempre `{ timestamps: true }` en el Schema
 2. Índices compuestos para los campos que se filtran juntos
 3. Guard: `mongoose.models.X || mongoose.model('X', XSchema)`
 4. Identificador de usuario: `usuarioEmail: String` (NO `usuario_id: ObjectId`)
 
 **Componentes React:**
+
 1. `page.tsx` = Server Component → pasa data como props al Client Component
 2. `'use client'` solo cuando hay estado, efectos o event handlers
 3. `React.memo` en componentes que renderizan listas
@@ -70,6 +75,7 @@ src/
 ### Features activas vs eliminadas
 
 **Activas:**
+
 - `/parcelas` — CRUD completo, paginación, filtros, caché
 - `/verduras` — Enciclopedia de cultivos
 - `/calculadora` — Calculadora de siembra
@@ -81,10 +87,12 @@ src/
 - `/proveedores` — Directorio de proveedores (en construcción)
 
 **Eliminadas (NO recrear):**
+
 - `/calendario` — Feature eliminada
 - `ChatVerduras` — Feature eliminada (no hay backend de IA)
 
 ### Lo que NUNCA debes hacer
+
 - NO agregar IA/LLM (ni OpenAI, ni Anthropic, ni Vercel AI SDK)
 - NO agregar CMS externo (Sanity, Contentful)
 - NO agregar librerías de UI (shadcn, MUI, Chakra)

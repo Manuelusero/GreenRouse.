@@ -6,32 +6,76 @@ import ParcelaCard from './ParcelaCard'
 import PaginationControls from './PaginationControls'
 import ParcelaFilters from './ParcelaFilters'
 
-interface ParcelasListProps {
-  userEmail: string
-  onEditParcela?: (parcela: any) => void
-  onDeleteParcela?: (id: string) => void
-  onViewParcela?: (parcela: any) => void
+interface LocalParcelaRaw {
+  nombre: string
+  largo: number
+  ancho: number
+  cultivo: string | string[]
 }
 
-function ParcelasList({ 
-  userEmail, 
-  onEditParcela, 
-  onDeleteParcela, 
-  onViewParcela 
+function mapLocalParcela(p: LocalParcelaRaw, index: number): import('@/stores/parcelasStore').Parcela {
+  const area = p.largo * p.ancho
+  return {
+    _id: `local-${index}`,
+    nombre: p.nombre,
+    area,
+    cultivos: Array.isArray(p.cultivo) ? p.cultivo : [p.cultivo].filter(Boolean),
+    tipo: 'local',
+    ubicacion: '',
+    clima: '',
+    estado: 'activa',
+    riego: 'manual',
+    fechaSiembra: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    generadoAutomaticamente: false,
+    dimensiones: { largo: p.largo, ancho: p.ancho, area },
+  }
+}
+
+interface ParcelasListProps {
+  userEmail: string
+  localMode?: boolean
+  onEditParcela?: (parcela: import('@/stores/parcelasStore').Parcela) => void
+  onDeleteParcela?: (id: string) => void
+  onViewParcela?: (parcela: import('@/stores/parcelasStore').Parcela) => void
+}
+
+function ParcelasList({
+  userEmail,
+  localMode = false,
+  onEditParcela,
+  onDeleteParcela,
+  onViewParcela,
 }: ParcelasListProps) {
-  const { 
-    parcelas, 
-    loading, 
-    error, 
-    fetchParcelas 
+  const {
+    parcelas,
+    loading,
+    error,
+    fetchParcelas,
+    setParcelas,
+    setLoading,
   } = useParcelasStore()
 
-  // Efecto para cargar las parcelas cuando cambia el userEmail
   useEffect(() => {
+    if (localMode) {
+      // Modo local: leer parcelas del localStorage
+      setLoading(true)
+      try {
+        const raw = localStorage.getItem('greenrouse-parcelas-temp')
+        const localData: LocalParcelaRaw[] = raw ? JSON.parse(raw) : []
+        setParcelas(localData.map(mapLocalParcela))
+      } catch {
+        setParcelas([])
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
     if (userEmail) {
       fetchParcelas(userEmail, 1, 10)
     }
-  }, [userEmail])
+  }, [userEmail, localMode])
 
   if (loading) {
     return (

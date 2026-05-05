@@ -1071,21 +1071,17 @@ export default function ComenzarHuerta() {
                       localStorage.setItem('greenrouse-onboarding', JSON.stringify(datosCompletos))
                       localStorage.setItem('greenrouse-parcelas-temp', JSON.stringify(formData.parcelas || []))
                       
-                      alert('✅ Tus datos se han guardado localmente. Podrás crear una cuenta después para sincronizarlos.')
-                      
-                      // Crear URL temporal para ver las parcelas
                       router.push('/parcelas?mode=local&from=onboarding')
                       
                     } catch {
-                      // En caso de error, usar localStorage y continuar
+                      // En caso de error, guardar localmente y continuar
                       const datosCompletos = {
                         ...formData,
                         parcelas_creadas_manual: formData.parcelas || []
                       }
                       localStorage.setItem('greenrouse-onboarding', JSON.stringify(datosCompletos))
                       localStorage.setItem('greenrouse-parcelas-temp', JSON.stringify(formData.parcelas || []))
-                      alert('Hubo un problema, pero tus datos se guardaron localmente.')
-                      // Omitir redirección automática para evitar el problema
+                      router.push('/parcelas?mode=local&from=onboarding')
                     }
                   }}
                   className="bg-leaf-green text-white px-6 py-4 rounded-lg hover:bg-leaf-green/90 transition-colors font-semibold"

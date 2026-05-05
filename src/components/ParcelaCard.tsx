@@ -1,6 +1,7 @@
 'use client'
 
 import { memo } from 'react'
+import Link from 'next/link'
 import { Parcela } from '@/stores'
 
 interface ParcelaCardProps {
@@ -81,18 +82,18 @@ function ParcelaCard({ parcela, onEdit, onDelete, onView }: ParcelaCardProps) {
       )}
 
       <div className="mt-4 flex gap-2">
-        <button
-          onClick={handleView}
-          className="flex-1 bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 transition-colors"
+        <Link
+          href={`/parcelas/${parcela._id}`}
+          className="flex-1 bg-leaf-green text-white px-3 py-2 rounded text-sm hover:bg-leaf-green/90 transition-colors text-center font-medium"
         >
           Ver
-        </button>
-        <button
-          onClick={handleEdit}
-          className="flex-1 bg-gray-500 text-white px-3 py-2 rounded text-sm hover:bg-gray-600 transition-colors"
+        </Link>
+        <Link
+          href={`/parcelas/${parcela._id}?edit=true`}
+          className="flex-1 bg-gray-500 text-white px-3 py-2 rounded text-sm hover:bg-gray-600 transition-colors text-center"
         >
           Editar
-        </button>
+        </Link>
         <button
           onClick={handleDelete}
           className="bg-red-500 text-white px-3 py-2 rounded text-sm hover:bg-red-600 transition-colors"
